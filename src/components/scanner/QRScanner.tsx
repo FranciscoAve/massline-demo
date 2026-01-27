@@ -8,6 +8,7 @@ interface QRScannerProps {
   title?: string;
   subtitle?: string;
   expectedType?: 'product' | 'location' | 'order';
+  simulateValue?: string; // Código específico para simular (ej: la ubicación actual)
 }
 
 export const QRScanner: React.FC<QRScannerProps> = ({
@@ -16,6 +17,7 @@ export const QRScanner: React.FC<QRScannerProps> = ({
   title = 'Escanear Código QR',
   subtitle = 'Apunta la cámara al código QR',
   expectedType,
+  simulateValue,
 }) => {
   const [error, setError] = useState<string | null>(null);
   const [isFlashOn, setIsFlashOn] = useState(false);
@@ -111,14 +113,16 @@ export const QRScanner: React.FC<QRScannerProps> = ({
     if (hasScannedRef.current) return;
     hasScannedRef.current = true;
 
-    // Generar código según el tipo esperado
-    let mockCode = 'MOCK-CODE';
-    if (expectedType === 'product') {
-      mockCode = 'REP-12345'; // Filtro de Aceite XYZ
-    } else if (expectedType === 'location') {
-      mockCode = 'A-03-E2-N1';
-    } else if (expectedType === 'order') {
-      mockCode = 'OC-2025-001234';
+    // Usar simulateValue si está disponible, sino generar según tipo
+    let mockCode = simulateValue || 'MOCK-CODE';
+    if (!simulateValue) {
+      if (expectedType === 'product') {
+        mockCode = 'REP-12345';
+      } else if (expectedType === 'location') {
+        mockCode = 'A-03-E2-N1';
+      } else if (expectedType === 'order') {
+        mockCode = 'OC-2025-001234';
+      }
     }
 
     if (navigator.vibrate) {

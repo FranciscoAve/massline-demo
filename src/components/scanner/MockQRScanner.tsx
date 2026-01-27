@@ -17,9 +17,15 @@ const mockCodes = {
   ],
   location: [
     { label: 'A-03-E2-N1', code: 'SS:L:A-03-E2-N1' },
-    { label: 'B-01-E3-N2', code: 'SS:L:B-01-E3-N2' },
+    { label: 'A-03-E2-N2', code: 'SS:L:A-03-E2-N2' },
+    { label: 'A-03-E3-N1', code: 'SS:L:A-03-E3-N1' },
     { label: 'A-01-E1-N1', code: 'SS:L:A-01-E1-N1' },
-    { label: 'C-05-E4-N3', code: 'SS:L:C-05-E4-N3' },
+    { label: 'A-01-E1-N2', code: 'SS:L:A-01-E1-N2' },
+    { label: 'B-01-E1-N1', code: 'SS:L:B-01-E1-N1' },
+    { label: 'B-01-E1-N2', code: 'SS:L:B-01-E1-N2' },
+    { label: 'B-01-E3-N2', code: 'SS:L:B-01-E3-N2' },
+    { label: 'B-02-E2-N1', code: 'SS:L:B-02-E2-N1' },
+    { label: 'C-01-E1-N1', code: 'SS:L:C-01-E1-N1' },
   ],
   order: [
     { label: 'Orden DP-2025-0145', code: 'SS:D:DP-2025-0145' },

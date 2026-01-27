@@ -12,6 +12,7 @@ interface QRScannerWrapperProps {
   title?: string;
   subtitle?: string;
   expectedType?: 'product' | 'location' | 'order';
+  simulateValue?: string;
 }
 
 /**
@@ -44,6 +45,7 @@ export const QRScannerWrapper: React.FC<QRScannerWrapperProps> = ({
   title,
   subtitle,
   expectedType,
+  simulateValue,
 }) => {
   if (USE_MOCK_SCANNER) {
     return (
@@ -62,6 +64,7 @@ export const QRScannerWrapper: React.FC<QRScannerWrapperProps> = ({
       title={title}
       subtitle={subtitle}
       expectedType={expectedType}
+      simulateValue={simulateValue}
     />
   );
 };
