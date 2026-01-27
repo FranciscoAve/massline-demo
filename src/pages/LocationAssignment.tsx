@@ -1,11 +1,21 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Search } from 'lucide-react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { ArrowLeft } from 'lucide-react';
 import Stepper from '../components/navigation/Stepper';
 import { LocationSuggestion } from '../components/location/LocationSuggestion';
-import { QRScannerWrapper } from '../components/scanner';
 import Button from '../components/ui/Button';
 import { mockLocations } from '../data/mockData';
+
+const MAX_CAPACITY_PER_LEVEL = 100;
+
+interface ReceiptItem {
+  id: string;
+  sku: string;
+  name: string;
+  image: string;
+  category: string;
+  quantity: number;
+}
 
 interface ProductToLocate {
   id: string;
@@ -15,89 +25,84 @@ interface ProductToLocate {
   quantity: number;
   confirmed: boolean;
   assignedLocation?: string;
+  level: string; // N1, N2, N3...
 }
 
 const LocationAssignment: React.FC = () => {
   const navigate = useNavigate();
-  const [currentProductIndex, setCurrentProductIndex] = useState(0);
-  const [showScanner, setShowScanner] = useState(false);
+  const location = useLocation();
+  const locationState = location.state as {
+    receiptList?: ReceiptItem[];
+    orderNumber?: string;
+    supplier?: string;
+  } | null;
 
-  // Mock products to locate (from previous screen)
-  const [products, setProducts] = useState<ProductToLocate[]>([
-    {
-      id: '1',
-      sku: 'REP-12345',
-      name: 'Filtro de Aceite XYZ Premium',
-      image: 'https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?w=100',
-      quantity: 50,
+  const receiptList = locationState?.receiptList || [];
+  const orderNumber = locationState?.orderNumber || '';
+  const supplier = locationState?.supplier || '';
+
+  const [currentProductIndex, setCurrentProductIndex] = useState(0);
+
+  // Construir productos desde la lista de recibo, asignando un nivel a cada uno
+  const [products, setProducts] = useState<ProductToLocate[]>(() =>
+    receiptList.map((item, index) => ({
+      id: item.id,
+      sku: item.sku,
+      name: item.name,
+      image: item.image,
+      quantity: item.quantity,
       confirmed: false,
-    },
-    {
-      id: '2',
-      sku: 'REP-98765',
-      name: 'Pastilla de Freno Delantera',
-      image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100',
-      quantity: 4,
-      confirmed: false,
-    },
-    {
-      id: '4',
-      sku: 'REP-11111',
-      name: 'Amortiguador Delantero',
-      image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100',
-      quantity: 2,
-      confirmed: false,
-    },
-  ]);
+      level: `N${index + 1}`,
+    }))
+  );
 
   const currentProduct = products[currentProductIndex];
 
-  // Simulated putaway algorithm - suggests optimal location
-  const suggestedLocation = mockLocations.find(l => l.code === 'A-03-E2-N1')!;
+  // Si no hay productos, redirigir a la lista de recibo
+  if (!currentProduct) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
+        <p className="text-gray-500 mb-4">No hay productos para ubicar.</p>
+        <Button onClick={() => navigate('/reception/scan')}>Volver a Lista de Recibo</Button>
+      </div>
+    );
+  }
+
+  // Ubicación base: misma zona/pasillo/estante, diferente nivel por producto
+  const locationCode = `A-03-E2-${currentProduct.level}`;
+  const utilizationPercent = Math.min((currentProduct.quantity / MAX_CAPACITY_PER_LEVEL) * 100, 100);
+  const isFull = currentProduct.quantity >= MAX_CAPACITY_PER_LEVEL;
+
+  // Alternativas solo cuando el nivel está lleno
   const alternativeLocations = mockLocations
-    .filter(l => l.code !== 'A-03-E2-N1' && l.type === 'storage')
+    .filter(l => l.code !== locationCode && l.type === 'storage')
     .slice(0, 2);
 
-  const handleScan = (qrCode: string) => {
-    setShowScanner(false);
+  const handleConfirmLocation = () => {
+    const updatedProducts = [...products];
+    updatedProducts[currentProductIndex].confirmed = true;
+    updatedProducts[currentProductIndex].assignedLocation = locationCode;
+    setProducts(updatedProducts);
 
-    // El QR puede ser:
-    // - Formato con prefijo: "SS:L:A-03-E2-N1"
-    // - Formato simple: "A-03-E2-N1"
-    let scannedCode = qrCode;
-
-    // Si tiene prefijo SS:L:, lo removemos
-    if (qrCode.startsWith('SS:L:')) {
-      scannedCode = qrCode.replace('SS:L:', '');
-    }
-
-    // Validar que parece un código de ubicación (formato: X-XX-XX-XX)
-    const locationPattern = /^[A-Z]-\d{2}-E\d-N\d$/;
-    if (!locationPattern.test(scannedCode)) {
-      alert('Código QR inválido. Se esperaba una ubicación (ej: A-03-E2-N1)');
-      return;
-    }
-
-    if (scannedCode === suggestedLocation.code) {
-      // Correct location scanned
-      const updatedProducts = [...products];
-      updatedProducts[currentProductIndex].confirmed = true;
-      updatedProducts[currentProductIndex].assignedLocation = scannedCode;
-      setProducts(updatedProducts);
-
-      // Move to next product after a brief delay
-      setTimeout(() => {
-        if (currentProductIndex < products.length - 1) {
-          setCurrentProductIndex(currentProductIndex + 1);
-        } else {
-          // All products located, navigate to confirmation
-          navigate('/reception/confirmation');
-        }
-      }, 1500);
-    } else {
-      // Wrong location
-      alert(`Ubicación incorrecta. Diríjase a ${suggestedLocation.code}`);
-    }
+    setTimeout(() => {
+      if (currentProductIndex < products.length - 1) {
+        setCurrentProductIndex(currentProductIndex + 1);
+      } else {
+        // Pasar todos los productos confirmados a la página de confirmación
+        navigate('/reception/confirmation', {
+          state: {
+            orderNumber,
+            supplier,
+            products: updatedProducts.map((p) => ({
+              name: p.name,
+              sku: p.sku,
+              quantity: p.quantity,
+              location: p.assignedLocation || locationCode,
+            })),
+          },
+        });
+      }
+    }, 1500);
   };
 
   const handlePrevious = () => {
@@ -110,7 +115,18 @@ const LocationAssignment: React.FC = () => {
     if (currentProduct.confirmed && currentProductIndex < products.length - 1) {
       setCurrentProductIndex(currentProductIndex + 1);
     } else if (currentProduct.confirmed && currentProductIndex === products.length - 1) {
-      navigate('/reception/confirmation');
+      navigate('/reception/confirmation', {
+        state: {
+          orderNumber,
+          supplier,
+          products: products.map((p) => ({
+            name: p.name,
+            sku: p.sku,
+            quantity: p.quantity,
+            location: p.assignedLocation || `A-03-E2-${p.level}`,
+          })),
+        },
+      });
     }
   };
 
@@ -119,30 +135,30 @@ const LocationAssignment: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       {/* Header */}
-        <div className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between sticky top-0 z-10">
-          <button
-            onClick={() => navigate(-1)}
-            className="w-10 h-10 flex items-center justify-center active:scale-95 transition-transform"
-          >
-            <ArrowLeft className="w-6 h-6 text-gray-700" />
-          </button>
-          <h1 className="text-lg font-bold text-gray-900">Ubicación de Productos</h1>
-          <div className="w-10" />
-        </div>
+      <div className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between sticky top-0 z-10">
+        <button
+          onClick={() => navigate(-1)}
+          className="w-10 h-10 flex items-center justify-center active:scale-95 transition-transform"
+        >
+          <ArrowLeft className="w-6 h-6 text-gray-700" />
+        </button>
+        <h1 className="text-lg font-bold text-gray-900">Ubicación de Productos</h1>
+        <div className="w-10" />
+      </div>
 
-        {/* Stepper */}
-        <Stepper
-          steps={[
-            { label: 'Inicio' },
-            { label: 'Escaneo' },
-            { label: 'Ubicación' },
-            { label: 'Confirmar' },
-          ]}
-          currentStep={2}
-        />
+      {/* Stepper */}
+      <Stepper
+        steps={[
+          { label: 'Inicio' },
+          { label: 'Recibo' },
+          { label: 'Ubicación' },
+          { label: 'Confirmar' },
+        ]}
+        currentStep={2}
+      />
 
-        {/* Content */}
-        <div className="flex-1 p-4 pb-44 overflow-y-auto">
+      {/* Content */}
+      <div className="flex-1 p-4 pb-44 overflow-y-auto">
         {/* Product Counter */}
         <div className="text-center mb-4">
           <p className="text-sm text-gray-500">
@@ -164,8 +180,7 @@ const LocationAssignment: React.FC = () => {
               </h3>
               <p className="text-sm text-gray-500 font-mono mb-2">{currentProduct.sku}</p>
               <p className="text-sm text-gray-700">
-                <span className="font-semibold">Cantidad:</span> {currentProduct.quantity}{' '}
-                unidades
+                <span className="font-semibold">Cantidad:</span> {currentProduct.quantity} / {MAX_CAPACITY_PER_LEVEL} unidades
               </p>
             </div>
           </div>
@@ -174,38 +189,35 @@ const LocationAssignment: React.FC = () => {
         {/* Location Suggestion */}
         <div className="mb-4">
           <LocationSuggestion
-            locationCode={suggestedLocation.code}
-            zone={suggestedLocation.zone}
-            aisle={suggestedLocation.aisle}
-            rack={suggestedLocation.rack}
-            level={suggestedLocation.level}
+            locationCode={locationCode}
+            zone="A"
+            aisle="03"
+            rack="E2"
+            level={currentProduct.level}
             reason="Zona de alta rotación con espacio disponible"
-            utilization={suggestedLocation.currentUtilization * 100}
+            utilization={utilizationPercent}
             isConfirmed={currentProduct.confirmed}
-            onScanPress={() => setShowScanner(true)}
+            onConfirmPress={handleConfirmLocation}
             onMapPress={() => alert('Vista de mapa (próximamente)')}
           />
         </div>
 
-        {/* Alternative Locations */}
-        {!currentProduct.confirmed && (
+        {/* Alternativas - solo cuando el nivel está al 100% */}
+        {isFull && !currentProduct.confirmed && (
           <>
-            <p className="text-sm text-gray-500 mb-2">Alternativas (tap para expandir):</p>
+            <p className="text-sm text-red-500 font-medium mb-2">
+              Nivel lleno - Ubicaciones alternativas:
+            </p>
             <div className="space-y-1 mb-4">
               {alternativeLocations.map((loc) => (
                 <div
                   key={loc.id}
                   className="bg-white rounded-lg px-4 py-2 text-sm text-gray-600"
                 >
-                  • {loc.code} ({Math.round((1 - loc.currentUtilization) * 100)}% disponible)
+                  {loc.code} ({Math.round((1 - loc.currentUtilization) * 100)}% disponible)
                 </div>
               ))}
             </div>
-
-            <button className="w-full py-3 border-2 border-blue-500 text-blue-600 font-semibold rounded-xl flex items-center justify-center gap-2 active:scale-95 transition-transform">
-              <Search className="w-5 h-5" />
-              <span>Buscar otra ubicación</span>
-            </button>
           </>
         )}
       </div>
@@ -224,28 +236,17 @@ const LocationAssignment: React.FC = () => {
             variant="secondary"
             className="flex-1"
           >
-            ← Anterior
+            Anterior
           </Button>
           <Button
             onClick={handleNext}
             disabled={!currentProduct.confirmed}
             className="flex-1"
           >
-            {currentProductIndex === products.length - 1 ? 'FINALIZAR' : 'SIGUIENTE →'}
+            {currentProductIndex === products.length - 1 ? 'FINALIZAR' : 'SIGUIENTE'}
           </Button>
         </div>
       </div>
-
-      {/* Scanner Modal */}
-      {showScanner && (
-        <QRScannerWrapper
-          onScan={handleScan}
-          onClose={() => setShowScanner(false)}
-          title="Escanear Ubicación"
-          subtitle="Apunta al código QR de la estantería"
-          expectedType="location"
-        />
-      )}
     </div>
   );
 };

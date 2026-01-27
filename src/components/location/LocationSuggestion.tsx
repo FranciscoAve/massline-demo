@@ -1,5 +1,5 @@
 import React from 'react';
-import { Navigation, Map, QrCode, CheckCircle } from 'lucide-react';
+import { Navigation, Map, CheckCircle, MapPin } from 'lucide-react';
 
 interface LocationSuggestionProps {
   locationCode: string;
@@ -10,7 +10,7 @@ interface LocationSuggestionProps {
   reason: string;
   utilization: number;
   isConfirmed?: boolean;
-  onScanPress: () => void;
+  onConfirmPress: () => void;
   onMapPress?: () => void;
 }
 
@@ -23,7 +23,7 @@ export const LocationSuggestion: React.FC<LocationSuggestionProps> = ({
   reason,
   utilization,
   isConfirmed = false,
-  onScanPress,
+  onConfirmPress,
   onMapPress,
 }) => {
   if (isConfirmed) {
@@ -49,7 +49,7 @@ export const LocationSuggestion: React.FC<LocationSuggestionProps> = ({
       <div className="flex items-center mb-3">
         <Navigation className="w-5 h-5 text-blue-500" />
         <span className="text-xs font-bold text-blue-600 ml-1.5">
-          UBICACIÓN SUGERIDA
+          UBICACIÓN ASIGNADA
         </span>
       </div>
 
@@ -99,11 +99,11 @@ export const LocationSuggestion: React.FC<LocationSuggestionProps> = ({
       )}
 
       <button
-        onClick={onScanPress}
+        onClick={onConfirmPress}
         className="w-full bg-blue-500 text-white py-4 rounded-xl flex items-center justify-center gap-2 font-bold active:scale-[0.98] transition-transform shadow-md"
       >
-        <QrCode className="w-6 h-6" />
-        <span>ESCANEAR QR UBICACIÓN</span>
+        <MapPin className="w-6 h-6" />
+        <span>CONFIRMAR UBICACIÓN</span>
       </button>
     </div>
   );

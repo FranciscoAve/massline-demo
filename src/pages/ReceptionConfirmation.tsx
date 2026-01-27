@@ -1,17 +1,34 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { CheckCircle2, ChevronDown, Mail, Printer, AlertTriangle } from 'lucide-react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { CheckCircle2, ChevronDown, Mail, Printer } from 'lucide-react';
 import Stepper from '../components/navigation/Stepper';
 import Button from '../components/ui/Button';
 
+interface ConfirmedProduct {
+  name: string;
+  sku: string;
+  quantity: number;
+  location: string;
+}
+
 const ReceptionConfirmation: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const locationState = location.state as {
+    orderNumber?: string;
+    supplier?: string;
+    products?: ConfirmedProduct[];
+  } | null;
+
   const [showProductsTable, setShowProductsTable] = useState(true);
 
-  // Mock reception data
+  const confirmedProducts = locationState?.products || [];
+  const totalProducts = confirmedProducts.length;
+  const totalUnits = confirmedProducts.reduce((sum, p) => sum + p.quantity, 0);
+
   const receptionData = {
-    orderNumber: '#12345',
-    supplier: 'XYZ Corp',
+    orderNumber: locationState?.orderNumber || 'Sin orden',
+    supplier: locationState?.supplier || 'No especificado',
     date: new Date().toLocaleString('es-EC', {
       day: '2-digit',
       month: 'short',
@@ -19,19 +36,10 @@ const ReceptionConfirmation: React.FC = () => {
       hour: '2-digit',
       minute: '2-digit',
     }),
-    operator: 'Juan Pérez',
-    duration: '15 minutos',
-    products: [
-      { name: 'Filtro Aceite', quantity: 50, location: 'A-03-E2' },
-      { name: 'Bujía NGK', quantity: 4, location: 'A-03-E3' },
-      { name: 'Pastilla Freno', quantity: 2, location: 'B-01-E1' },
-    ],
-    totalProducts: 3,
-    totalUnits: 56,
-    observations: [
-      '2 productos no estaban en la orden original',
-      '1 producto con lote próximo a vencer',
-    ],
+    operator: 'Operador actual',
+    products: confirmedProducts,
+    totalProducts,
+    totalUnits,
   };
 
   return (
@@ -45,7 +53,7 @@ const ReceptionConfirmation: React.FC = () => {
         <Stepper
           steps={[
             { label: 'Inicio' },
-            { label: 'Escaneo' },
+            { label: 'Recibo' },
             { label: 'Ubicación' },
             { label: 'Confirmar' },
           ]}
@@ -81,8 +89,8 @@ const ReceptionConfirmation: React.FC = () => {
               <p className="font-semibold text-gray-900">{receptionData.operator}</p>
             </div>
             <div>
-              <p className="text-gray-500">Duración:</p>
-              <p className="font-semibold text-gray-900">{receptionData.duration}</p>
+              <p className="text-gray-500">Total unidades:</p>
+              <p className="font-semibold text-gray-900">{receptionData.totalUnits}</p>
             </div>
           </div>
         </div>
@@ -123,7 +131,10 @@ const ReceptionConfirmation: React.FC = () => {
                 <tbody>
                   {receptionData.products.map((product, index) => (
                     <tr key={index} className="border-b border-gray-100 last:border-none">
-                      <td className="px-4 py-3 text-gray-900">{product.name}</td>
+                      <td className="px-4 py-3">
+                        <p className="text-gray-900">{product.name}</p>
+                        <p className="text-xs text-gray-400 font-mono">{product.sku}</p>
+                      </td>
                       <td className="px-4 py-3 text-center font-semibold text-gray-900">
                         {product.quantity}
                       </td>
@@ -138,24 +149,6 @@ const ReceptionConfirmation: React.FC = () => {
           )}
         </div>
 
-        {/* Observations */}
-        {receptionData.observations.length > 0 && (
-          <div className="bg-yellow-50 border-2 border-yellow-200 rounded-xl p-4 mb-4">
-            <div className="flex items-start gap-3">
-              <AlertTriangle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-yellow-900 mb-2">OBSERVACIONES</p>
-                <ul className="space-y-1">
-                  {receptionData.observations.map((obs, index) => (
-                    <li key={index} className="text-sm text-yellow-800">
-                      • {obs}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* Actions */}
         <div className="flex gap-3 mb-4">

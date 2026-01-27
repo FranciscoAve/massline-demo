@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, QrCode, Search, HelpCircle, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Search, HelpCircle, AlertCircle } from 'lucide-react';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
 import Card from '../components/ui/Card';
-import { QRScannerWrapper } from '../components/scanner';
 import { mockApi } from '../services/mockApi';
 
 const ReceptionStart: React.FC = () => {
@@ -15,7 +14,6 @@ const ReceptionStart: React.FC = () => {
   const [supplier, setSupplier] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-  const [showQRScanner, setShowQRScanner] = useState(false);
 
   const reasons = [
     'Compra local sin OC',
@@ -75,24 +73,6 @@ const ReceptionStart: React.FC = () => {
     }
   };
 
-  const handleQRScan = (scannedCode: string) => {
-    // El scanner devuelve el texto del QR
-    // Puede ser: "OC-2025-001234" o "SS:O:OC-2025-001234"
-
-    // Si tiene prefijo SS:O:, lo removemos
-    const cleanCode = scannedCode.startsWith('SS:O:')
-      ? scannedCode.replace('SS:O:', '')
-      : scannedCode;
-
-    setOrderNumber(cleanCode);
-    setShowQRScanner(false);
-
-    // Auto-buscar la orden después de escanear
-    setTimeout(() => {
-      handleSearch();
-    }, 500);
-  };
-
   return (
     <div className="min-h-screen bg-bg-secondary flex flex-col">
       {/* Header */}
@@ -125,7 +105,7 @@ const ReceptionStart: React.FC = () => {
             <div className="h-10 w-10 rounded-full bg-border-light text-text-tertiary flex items-center justify-center font-semibold">
               2
             </div>
-            <span className="text-xs text-text-tertiary">Escaneo</span>
+            <span className="text-xs text-text-tertiary">Recibo</span>
           </div>
           <div className="flex-1 h-1 bg-border-light mx-2" />
           <div className="flex flex-col items-center gap-1">
@@ -174,35 +154,9 @@ const ReceptionStart: React.FC = () => {
         {/* With Order */}
         {hasOrder && (
           <div className="space-y-4 animate-fade-in">
-            <Card
-              variant="elevated"
-              className="cursor-pointer hover:shadow-lg transition-shadow"
-              onClick={() => setShowQRScanner(true)}
-            >
-              <div className="flex flex-col items-center justify-center py-6 gap-3">
-                <div className="p-4 bg-primary/10 rounded-2xl">
-                  <QrCode className="h-12 w-12 text-primary" />
-                </div>
-                <h5 className="text-base font-semibold text-text-primary">
-                  ESCANEAR QR DE ORDEN
-                </h5>
-                <p className="text-sm text-text-secondary">
-                  o ingrese manualmente
-                </p>
-              </div>
-            </Card>
-
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-border-medium" />
-              </div>
-              <div className="relative flex justify-center">
-                <span className="bg-bg-secondary px-3 text-sm text-text-tertiary">
-                  O
-                </span>
-              </div>
-            </div>
-
+            <label className="text-sm font-medium text-text-secondary mb-1 block">
+              Número de orden de compra
+            </label>
             <div className="flex gap-2">
               <Input
                 placeholder="Ej: OC-2025-001234"
@@ -296,17 +250,6 @@ const ReceptionStart: React.FC = () => {
           )}
         </div>
       </div>
-
-      {/* QR Scanner - Usa cámara real */}
-      {showQRScanner && (
-        <QRScannerWrapper
-          onScan={handleQRScan}
-          onClose={() => setShowQRScanner(false)}
-          title="Escanear Orden"
-          subtitle="Apunta al código QR de la orden de compra"
-          expectedType="order"
-        />
-      )}
 
       {/* Footer Actions */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-border-light p-2 space-y-3">
