@@ -168,9 +168,9 @@ const QueryModule: React.FC = () => {
 
                 {/* Mock locations for this product */}
                 {[
-                  { code: 'A-03-E2-N1', quantity: 25, percentage: 55 },
-                  { code: 'A-03-E3-N1', quantity: 15, percentage: 33 },
-                  { code: 'B-01-E1-N2', quantity: 5, percentage: 11 },
+                  { code: 'Z01-Pa-E2-N1', quantity: 25, percentage: 55 },
+                  { code: 'Z01-Pb-E1-N1', quantity: 15, percentage: 33 },
+                  { code: 'Z02-Pa-E1-N2', quantity: 5, percentage: 11 },
                 ].map(loc => (
                   <div
                     key={loc.code}

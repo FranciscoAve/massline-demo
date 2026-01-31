@@ -237,37 +237,47 @@ export const mockProducts: Product[] = [
 ];
 
 // Mock Locations
+// Formato: Z[01-32]-P[a-g]-E[1-9]-N[1-5]
+// Z = Zona (1-32), P = Pasillo (a-g), E = Estante (1-9), N = Nivel (1-5)
 export const mockLocations: WarehouseLocation[] = [
-  // Zone A - High rotation (Class A)
-  { id: '1', code: 'A-01-E1-N1', zone: 'A', aisle: '01', rack: 'E1', level: 'N1', type: 'storage', maxUnits: 100, currentUtilization: 0.65, status: 'active' },
-  { id: '2', code: 'A-01-E1-N2', zone: 'A', aisle: '01', rack: 'E1', level: 'N2', type: 'storage', maxUnits: 100, currentUtilization: 0.72, status: 'active' },
-  { id: '3', code: 'A-03-E2-N1', zone: 'A', aisle: '03', rack: 'E2', level: 'N1', type: 'storage', maxUnits: 120, currentUtilization: 0.45, status: 'active' },
-  { id: '4', code: 'A-03-E2-N2', zone: 'A', aisle: '03', rack: 'E2', level: 'N2', type: 'storage', maxUnits: 120, currentUtilization: 0.15, status: 'active' },
-  { id: '5', code: 'A-03-E3-N1', zone: 'A', aisle: '03', rack: 'E3', level: 'N1', type: 'storage', maxUnits: 100, currentUtilization: 0.80, status: 'active' },
-  { id: '6', code: 'A-04-E1-N1', zone: 'A', aisle: '04', rack: 'E1', level: 'N1', type: 'storage', maxUnits: 100, currentUtilization: 0.10, status: 'active' },
+  // Zona 01 - Alta rotación (Clase A)
+  { id: '1', code: 'Z01-Pa-E1-N1', zone: '01', aisle: 'a', rack: 'E1', level: 'N1', type: 'storage', maxUnits: 100, currentUtilization: 0.65, status: 'active' },
+  { id: '2', code: 'Z01-Pa-E1-N2', zone: '01', aisle: 'a', rack: 'E1', level: 'N2', type: 'storage', maxUnits: 100, currentUtilization: 0.72, status: 'active' },
+  { id: '3', code: 'Z01-Pa-E2-N1', zone: '01', aisle: 'a', rack: 'E2', level: 'N1', type: 'storage', maxUnits: 120, currentUtilization: 0.45, status: 'active' },
+  { id: '4', code: 'Z01-Pa-E2-N2', zone: '01', aisle: 'a', rack: 'E2', level: 'N2', type: 'storage', maxUnits: 120, currentUtilization: 0.15, status: 'active' },
+  { id: '5', code: 'Z01-Pb-E1-N1', zone: '01', aisle: 'b', rack: 'E1', level: 'N1', type: 'storage', maxUnits: 100, currentUtilization: 0.80, status: 'active' },
+  { id: '6', code: 'Z01-Pb-E1-N2', zone: '01', aisle: 'b', rack: 'E1', level: 'N2', type: 'storage', maxUnits: 100, currentUtilization: 0.10, status: 'active' },
 
-  // Zone B - Medium rotation (Class B)
-  { id: '7', code: 'B-01-E1-N1', zone: 'B', aisle: '01', rack: 'E1', level: 'N1', type: 'storage', maxUnits: 150, currentUtilization: 0.55, status: 'active' },
-  { id: '8', code: 'B-01-E1-N2', zone: 'B', aisle: '01', rack: 'E1', level: 'N2', type: 'storage', maxUnits: 150, currentUtilization: 0.40, status: 'active' },
-  { id: '9', code: 'B-01-E3-N2', zone: 'B', aisle: '01', rack: 'E3', level: 'N2', type: 'storage', maxUnits: 150, currentUtilization: 0.68, status: 'active' },
-  { id: '10', code: 'B-02-E2-N1', zone: 'B', aisle: '02', rack: 'E2', level: 'N1', type: 'storage', maxUnits: 130, currentUtilization: 0.45, status: 'active' },
+  // Zona 02 - Alta rotación
+  { id: '7', code: 'Z02-Pa-E1-N1', zone: '02', aisle: 'a', rack: 'E1', level: 'N1', type: 'storage', maxUnits: 150, currentUtilization: 0.55, status: 'active' },
+  { id: '8', code: 'Z02-Pa-E1-N2', zone: '02', aisle: 'a', rack: 'E1', level: 'N2', type: 'storage', maxUnits: 150, currentUtilization: 0.40, status: 'active' },
+  { id: '9', code: 'Z02-Pb-E3-N2', zone: '02', aisle: 'b', rack: 'E3', level: 'N2', type: 'storage', maxUnits: 150, currentUtilization: 0.68, status: 'active' },
+  { id: '10', code: 'Z02-Pc-E2-N1', zone: '02', aisle: 'c', rack: 'E2', level: 'N1', type: 'storage', maxUnits: 130, currentUtilization: 0.45, status: 'active' },
 
-  // Zone C - Low rotation (Class C)
-  { id: '11', code: 'C-01-E1-N1', zone: 'C', aisle: '01', rack: 'E1', level: 'N1', type: 'storage', maxUnits: 200, currentUtilization: 0.35, status: 'active' },
-  { id: '12', code: 'C-02-E1-N3', zone: 'C', aisle: '02', rack: 'E1', level: 'N3', type: 'storage', maxUnits: 180, currentUtilization: 0.22, status: 'active' },
-  { id: '13', code: 'C-05-E4-N3', zone: 'C', aisle: '05', rack: 'E4', level: 'N3', type: 'storage', maxUnits: 180, currentUtilization: 0.18, status: 'active' },
+  // Zona 03 - Media rotación
+  { id: '11', code: 'Z03-Pa-E1-N1', zone: '03', aisle: 'a', rack: 'E1', level: 'N1', type: 'storage', maxUnits: 200, currentUtilization: 0.35, status: 'active' },
+  { id: '12', code: 'Z03-Pa-E1-N3', zone: '03', aisle: 'a', rack: 'E1', level: 'N3', type: 'storage', maxUnits: 180, currentUtilization: 0.22, status: 'active' },
+  { id: '13', code: 'Z03-Pd-E4-N3', zone: '03', aisle: 'd', rack: 'E4', level: 'N3', type: 'storage', maxUnits: 180, currentUtilization: 0.18, status: 'active' },
 
-  // Receiving and dispatch areas
-  { id: '14', code: 'RCV-01', zone: 'R', aisle: '00', rack: 'E0', level: 'N0', type: 'receiving', maxUnits: 500, currentUtilization: 0.12, status: 'active' },
-  { id: '15', code: 'RCV-02', zone: 'R', aisle: '00', rack: 'E0', level: 'N0', type: 'receiving', maxUnits: 500, currentUtilization: 0.08, status: 'active' },
-  { id: '16', code: 'DSP-01', zone: 'D', aisle: '00', rack: 'E0', level: 'N0', type: 'dispatch', maxUnits: 300, currentUtilization: 0.45, status: 'active' },
-  { id: '17', code: 'DSP-02', zone: 'D', aisle: '00', rack: 'E0', level: 'N0', type: 'dispatch', maxUnits: 300, currentUtilization: 0.32, status: 'active' },
-  { id: '18', code: 'STG-01', zone: 'S', aisle: '00', rack: 'E0', level: 'N0', type: 'staging', maxUnits: 200, currentUtilization: 0.25, status: 'active' },
-  { id: '19', code: 'A-02-E1-N1', zone: 'A', aisle: '02', rack: 'E1', level: 'N1', type: 'storage', maxUnits: 100, currentUtilization: 0.50, status: 'active' },
-  { id: '20', code: 'A-02-E2-N1', zone: 'A', aisle: '02', rack: 'E2', level: 'N1', type: 'storage', maxUnits: 100, currentUtilization: 0.60, status: 'active' },
+  // Zona 04 - Media rotación
+  { id: '14', code: 'Z04-Pa-E1-N1', zone: '04', aisle: 'a', rack: 'E1', level: 'N1', type: 'storage', maxUnits: 100, currentUtilization: 0.50, status: 'active' },
+  { id: '15', code: 'Z04-Pa-E2-N1', zone: '04', aisle: 'a', rack: 'E2', level: 'N1', type: 'storage', maxUnits: 100, currentUtilization: 0.60, status: 'active' },
+  { id: '16', code: 'Z04-Pb-E1-N1', zone: '04', aisle: 'b', rack: 'E1', level: 'N1', type: 'storage', maxUnits: 100, currentUtilization: 0.45, status: 'active' },
+
+  // Zona 05 - Baja rotación
+  { id: '17', code: 'Z05-Pa-E1-N1', zone: '05', aisle: 'a', rack: 'E1', level: 'N1', type: 'storage', maxUnits: 200, currentUtilization: 0.30, status: 'active' },
+  { id: '18', code: 'Z05-Pc-E2-N4', zone: '05', aisle: 'c', rack: 'E2', level: 'N4', type: 'storage', maxUnits: 180, currentUtilization: 0.25, status: 'active' },
+
+  // Áreas de recepción y despacho
+  { id: '19', code: 'RCV-01', zone: 'R', aisle: '00', rack: 'E0', level: 'N0', type: 'receiving', maxUnits: 500, currentUtilization: 0.12, status: 'active' },
+  { id: '20', code: 'RCV-02', zone: 'R', aisle: '00', rack: 'E0', level: 'N0', type: 'receiving', maxUnits: 500, currentUtilization: 0.08, status: 'active' },
+  { id: '21', code: 'DSP-01', zone: 'D', aisle: '00', rack: 'E0', level: 'N0', type: 'dispatch', maxUnits: 300, currentUtilization: 0.45, status: 'active' },
+  { id: '22', code: 'DSP-02', zone: 'D', aisle: '00', rack: 'E0', level: 'N0', type: 'dispatch', maxUnits: 300, currentUtilization: 0.32, status: 'active' },
+  { id: '23', code: 'STG-01', zone: 'S', aisle: '00', rack: 'E0', level: 'N0', type: 'staging', maxUnits: 200, currentUtilization: 0.25, status: 'active' },
 ];
 
 // Mock Picking Orders
+// Ubicaciones actualizadas al formato: Z[01-32]-P[a-g]-E[1-9]-N[1-5]
 export const mockOrders: PickingOrder[] = [
   {
     id: '1',
@@ -287,7 +297,7 @@ export const mockOrders: PickingOrder[] = [
         productImage: 'https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?w=100',
         requestedQuantity: 10,
         pickedQuantity: 0,
-        locationCode: 'A-03-E2-N1',
+        locationCode: 'Z01-Pa-E2-N1',
         distance: 15,
         status: 'pending',
       },
@@ -298,7 +308,7 @@ export const mockOrders: PickingOrder[] = [
         productImage: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100',
         requestedQuantity: 4,
         pickedQuantity: 0,
-        locationCode: 'B-01-E3-N2',
+        locationCode: 'Z02-Pb-E3-N2',
         distance: 22,
         status: 'pending',
       },
@@ -309,7 +319,7 @@ export const mockOrders: PickingOrder[] = [
         productImage: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100',
         requestedQuantity: 2,
         pickedQuantity: 0,
-        locationCode: 'A-01-E1-N1',
+        locationCode: 'Z01-Pa-E1-N1',
         distance: 8,
         status: 'pending',
       },
@@ -320,7 +330,7 @@ export const mockOrders: PickingOrder[] = [
         productImage: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100',
         requestedQuantity: 8,
         pickedQuantity: 0,
-        locationCode: 'A-03-E3-N1',
+        locationCode: 'Z01-Pb-E1-N1',
         distance: 2,
         status: 'pending',
       },
@@ -331,7 +341,7 @@ export const mockOrders: PickingOrder[] = [
         productImage: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100',
         requestedQuantity: 3,
         pickedQuantity: 0,
-        locationCode: 'B-01-E1-N1',
+        locationCode: 'Z02-Pa-E1-N1',
         distance: 18,
         status: 'pending',
       },
@@ -357,7 +367,7 @@ export const mockOrders: PickingOrder[] = [
         productImage: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100',
         requestedQuantity: 5,
         pickedQuantity: 0,
-        locationCode: 'A-01-E1-N2',
+        locationCode: 'Z01-Pa-E1-N2',
         distance: 12,
         status: 'pending',
       },
@@ -368,7 +378,7 @@ export const mockOrders: PickingOrder[] = [
         productImage: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100',
         requestedQuantity: 12,
         pickedQuantity: 0,
-        locationCode: 'B-02-E2-N1',
+        locationCode: 'Z02-Pc-E2-N1',
         distance: 25,
         status: 'pending',
       },
@@ -379,7 +389,7 @@ export const mockOrders: PickingOrder[] = [
         productImage: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100',
         requestedQuantity: 2,
         pickedQuantity: 0,
-        locationCode: 'B-01-E1-N2',
+        locationCode: 'Z02-Pa-E1-N2',
         distance: 20,
         status: 'pending',
       },
@@ -404,7 +414,7 @@ export const mockOrders: PickingOrder[] = [
         productImage: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100',
         requestedQuantity: 4,
         pickedQuantity: 0,
-        locationCode: 'C-01-E1-N1',
+        locationCode: 'Z03-Pa-E1-N1',
         distance: 35,
         status: 'pending',
       },
@@ -415,7 +425,7 @@ export const mockOrders: PickingOrder[] = [
         productImage: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100',
         requestedQuantity: 6,
         pickedQuantity: 0,
-        locationCode: 'B-01-E3-N2',
+        locationCode: 'Z02-Pb-E3-N2',
         distance: 22,
         status: 'pending',
       },
@@ -441,7 +451,7 @@ export const mockOrders: PickingOrder[] = [
         productImage: 'https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?w=100',
         requestedQuantity: 15,
         pickedQuantity: 0,
-        locationCode: 'A-03-E2-N1',
+        locationCode: 'Z01-Pa-E2-N1',
         distance: 15,
         status: 'pending',
       },
@@ -467,7 +477,7 @@ export const mockOrders: PickingOrder[] = [
         productImage: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100',
         requestedQuantity: 6,
         pickedQuantity: 0,
-        locationCode: 'B-01-E1-N1',
+        locationCode: 'Z02-Pa-E1-N1',
         distance: 18,
         status: 'pending',
       },
@@ -478,7 +488,7 @@ export const mockOrders: PickingOrder[] = [
         productImage: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100',
         requestedQuantity: 8,
         pickedQuantity: 0,
-        locationCode: 'B-01-E3-N2',
+        locationCode: 'Z02-Pb-E3-N2',
         distance: 22,
         status: 'pending',
       },

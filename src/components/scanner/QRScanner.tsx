@@ -119,7 +119,7 @@ export const QRScanner: React.FC<QRScannerProps> = ({
       if (expectedType === 'product') {
         mockCode = 'REP-12345';
       } else if (expectedType === 'location') {
-        mockCode = 'A-03-E2-N1';
+        mockCode = 'Z01-Pa-E1-N1';
       } else if (expectedType === 'order') {
         mockCode = 'OC-2025-001234';
       }

@@ -16,16 +16,21 @@ const mockCodes = {
     { label: 'Cadena de Transmisión', code: 'SS:P:REP-22222' },
   ],
   location: [
-    { label: 'A-03-E2-N1', code: 'SS:L:A-03-E2-N1' },
-    { label: 'A-03-E2-N2', code: 'SS:L:A-03-E2-N2' },
-    { label: 'A-03-E3-N1', code: 'SS:L:A-03-E3-N1' },
-    { label: 'A-01-E1-N1', code: 'SS:L:A-01-E1-N1' },
-    { label: 'A-01-E1-N2', code: 'SS:L:A-01-E1-N2' },
-    { label: 'B-01-E1-N1', code: 'SS:L:B-01-E1-N1' },
-    { label: 'B-01-E1-N2', code: 'SS:L:B-01-E1-N2' },
-    { label: 'B-01-E3-N2', code: 'SS:L:B-01-E3-N2' },
-    { label: 'B-02-E2-N1', code: 'SS:L:B-02-E2-N1' },
-    { label: 'C-01-E1-N1', code: 'SS:L:C-01-E1-N1' },
+    // Zona 01 - Pasillo a
+    { label: 'Z01-Pa-E1-N1', code: 'SS:L:Z01-Pa-E1-N1' },
+    { label: 'Z01-Pa-E1-N2', code: 'SS:L:Z01-Pa-E1-N2' },
+    { label: 'Z01-Pa-E2-N1', code: 'SS:L:Z01-Pa-E2-N1' },
+    { label: 'Z01-Pa-E2-N2', code: 'SS:L:Z01-Pa-E2-N2' },
+    // Zona 01 - Pasillo b
+    { label: 'Z01-Pb-E1-N1', code: 'SS:L:Z01-Pb-E1-N1' },
+    { label: 'Z01-Pb-E1-N2', code: 'SS:L:Z01-Pb-E1-N2' },
+    // Zona 02
+    { label: 'Z02-Pa-E1-N1', code: 'SS:L:Z02-Pa-E1-N1' },
+    { label: 'Z02-Pa-E1-N2', code: 'SS:L:Z02-Pa-E1-N2' },
+    { label: 'Z02-Pb-E3-N2', code: 'SS:L:Z02-Pb-E3-N2' },
+    { label: 'Z02-Pc-E2-N1', code: 'SS:L:Z02-Pc-E2-N1' },
+    // Zona 03
+    { label: 'Z03-Pa-E1-N1', code: 'SS:L:Z03-Pa-E1-N1' },
   ],
   order: [
     { label: 'Orden DP-2025-0145', code: 'SS:D:DP-2025-0145' },

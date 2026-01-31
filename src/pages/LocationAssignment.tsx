@@ -69,7 +69,8 @@ const LocationAssignment: React.FC = () => {
   }
 
   // Ubicación base: misma zona/pasillo/estante, diferente nivel por producto
-  const locationCode = `A-03-E2-${currentProduct.level}`;
+  // Formato: Z01-Pa-E2-N[nivel]
+  const locationCode = `Z01-Pa-E2-${currentProduct.level}`;
   const utilizationPercent = Math.min((currentProduct.quantity / MAX_CAPACITY_PER_LEVEL) * 100, 100);
   const isFull = currentProduct.quantity >= MAX_CAPACITY_PER_LEVEL;
 
@@ -123,7 +124,7 @@ const LocationAssignment: React.FC = () => {
             name: p.name,
             sku: p.sku,
             quantity: p.quantity,
-            location: p.assignedLocation || `A-03-E2-${p.level}`,
+            location: p.assignedLocation || `Z01-Pa-E2-${p.level}`,
           })),
         },
       });

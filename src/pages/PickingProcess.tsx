@@ -13,37 +13,47 @@ interface ShelfProduct {
   availableQuantity: number;
 }
 
+// Inventario por ubicación con nuevo formato: Z[01-32]-P[a-g]-E[1-9]-N[1-5]
 const mockShelfInventory: Record<string, ShelfProduct[]> = {
-  'A-03-E2-N1': [
+  // Zona 01 - Pasillo a
+  'Z01-Pa-E1-N1': [
+    { sku: 'REP-11111', name: 'Amortiguador Delantero', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 28 },
+  ],
+  'Z01-Pa-E1-N2': [
+    { sku: 'REP-22222', name: 'Cadena de Transmisión 520', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 67 },
+  ],
+  'Z01-Pa-E2-N1': [
     { sku: 'REP-12345', name: 'Filtro de Aceite XYZ Premium', image: 'https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?w=100', availableQuantity: 50 },
     { sku: 'REP-55555', name: 'Bujía NGK Iridium', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 8 },
   ],
-  'A-03-E2-N2': [
+  'Z01-Pa-E2-N2': [
     { sku: 'REP-98765', name: 'Pastilla de Freno Delantera', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 30 },
   ],
-  'B-01-E3-N2': [
+  // Zona 01 - Pasillo b
+  'Z01-Pb-E1-N1': [
+    { sku: 'REP-55555', name: 'Bujía NGK Iridium', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 3 },
+  ],
+  'Z01-Pb-E1-N2': [
+    { sku: 'REP-12345', name: 'Filtro de Aceite XYZ Premium', image: 'https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?w=100', availableQuantity: 25 },
+  ],
+  // Zona 02 - Pasillo a
+  'Z02-Pa-E1-N1': [
+    { sku: 'REP-77777', name: 'Batería 12V 7Ah', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 35 },
+  ],
+  'Z02-Pa-E1-N2': [
+    { sku: 'REP-44444', name: 'Kit de Embrague', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 8 },
+  ],
+  // Zona 02 - Pasillo b
+  'Z02-Pb-E3-N2': [
     { sku: 'REP-98765', name: 'Pastilla de Freno Delantera', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 12 },
     { sku: 'REP-66666', name: 'Disco de Freno Ventilado', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 22 },
   ],
-  'A-01-E1-N1': [
-    { sku: 'REP-11111', name: 'Amortiguador Delantero', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 28 },
-  ],
-  'A-01-E1-N2': [
-    { sku: 'REP-22222', name: 'Cadena de Transmisión 520', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 67 },
-  ],
-  'A-03-E3-N1': [
-    { sku: 'REP-55555', name: 'Bujía NGK Iridium', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 3 },
-  ],
-  'B-01-E1-N1': [
-    { sku: 'REP-77777', name: 'Batería 12V 7Ah', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 35 },
-  ],
-  'B-01-E1-N2': [
-    { sku: 'REP-44444', name: 'Kit de Embrague', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 8 },
-  ],
-  'B-02-E2-N1': [
+  // Zona 02 - Pasillo c
+  'Z02-Pc-E2-N1': [
     { sku: 'REP-88888', name: 'Aceite Motor 10W-40 Sintético', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 120 },
   ],
-  'C-01-E1-N1': [
+  // Zona 03 - Pasillo a
+  'Z03-Pa-E1-N1': [
     { sku: 'REP-33333', name: 'Llanta Delantera 17"', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 15 },
   ],
 };
@@ -256,12 +266,19 @@ const PickingProcess: React.FC = () => {
                 <p className="text-xl font-bold font-mono text-blue-600 text-center mb-1">
                   {currentItem.locationCode}
                 </p>
-                <p className="text-sm text-gray-600 text-center">
-                  ZONA {currentItem.locationCode.split('-')[0]} - PASILLO{' '}
-                  {currentItem.locationCode.split('-')[1]} - ESTANTE{' '}
-                  {currentItem.locationCode.split('-')[2]} - NIVEL{' '}
-                  {currentItem.locationCode.split('-')[3]}
-                </p>
+                {(() => {
+                  // Parsear formato Z01-Pa-E3-N2
+                  const parts = currentItem.locationCode.split('-');
+                  const zona = parts[0]?.replace('Z', '') || '';
+                  const pasillo = parts[1]?.replace('P', '').toUpperCase() || '';
+                  const estante = parts[2]?.replace('E', '') || '';
+                  const nivel = parts[3]?.replace('N', '') || '';
+                  return (
+                    <p className="text-sm text-gray-600 text-center">
+                      ZONA {zona} - PASILLO {pasillo} - ESTANTE {estante} - NIVEL {nivel}
+                    </p>
+                  );
+                })()}
               </div>
 
               {currentItem.distance && (

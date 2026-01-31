@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { CheckCircle2, Camera, Printer } from 'lucide-react';
+import { CheckCircle2, Camera, Printer, Package } from 'lucide-react';
 import Button from '../components/ui/Button';
 import { mockOrders } from '../data/mockData';
+import { generateLabelFromOrder } from '../utils/dispatchLabelPdf';
 
 const Packing: React.FC = () => {
   const { orderId } = useParams();
@@ -13,6 +14,8 @@ const Packing: React.FC = () => {
     noDamage: false,
   });
   const [photo, setPhoto] = useState<string | null>(null);
+  const [cartonCount, setCartonCount] = useState(1);
+  const [generatedLabels, setGeneratedLabels] = useState<number[]>([]);
 
   const order = mockOrders.find(o => o.id === orderId);
   if (!order) return <div>Order not found</div>;
@@ -22,8 +25,25 @@ const Packing: React.FC = () => {
 
   const allChecked = Object.values(checklist).every(v => v);
 
-  const handleGenerateLabel = () => {
-    alert('Etiqueta generada exitosamente');
+  const handleGenerateLabel = (cartonNumber: number) => {
+    generateLabelFromOrder(order, cartonNumber, cartonCount);
+    setGeneratedLabels((prev) => [...prev, cartonNumber]);
+  };
+
+  const handleGenerateAllLabels = () => {
+    for (let i = 1; i <= cartonCount; i++) {
+      setTimeout(() => {
+        generateLabelFromOrder(order, i, cartonCount);
+      }, i * 300); // Small delay between each PDF
+    }
+    setGeneratedLabels(Array.from({ length: cartonCount }, (_, i) => i + 1));
+  };
+
+  const handleFinalize = () => {
+    if (generatedLabels.length === 0) {
+      // Generate at least one label before finalizing
+      generateLabelFromOrder(order, 1, cartonCount);
+    }
     navigate(`/dispatch/confirmation/${orderId}`);
   };
 
@@ -111,16 +131,71 @@ const Packing: React.FC = () => {
         )}
       </div>
 
-      {/* Generate Label Button */}
-      <Button
-        onClick={handleGenerateLabel}
-        disabled={!allChecked}
-        fullWidth
-        className="mb-4"
-      >
-        <Printer className="w-5 h-5 mr-2" />
-        GENERAR ETIQUETA DESPACHO
-      </Button>
+      {/* Carton Count & Label Generation */}
+      <div className="bg-white rounded-xl shadow-sm p-4 mb-4">
+        <p className="text-sm font-semibold text-gray-700 mb-3">
+          <Package className="w-4 h-4 inline mr-2" />
+          Etiquetas de Despacho
+        </p>
+
+        {/* Carton count selector */}
+        <div className="flex items-center gap-3 mb-4">
+          <span className="text-sm text-gray-600">Número de cartones:</span>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setCartonCount(Math.max(1, cartonCount - 1))}
+              className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-700 font-bold"
+            >
+              -
+            </button>
+            <span className="w-8 text-center font-bold text-lg">{cartonCount}</span>
+            <button
+              onClick={() => setCartonCount(cartonCount + 1)}
+              className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-700 font-bold"
+            >
+              +
+            </button>
+          </div>
+        </div>
+
+        {/* Individual carton labels */}
+        <div className="grid grid-cols-3 gap-2 mb-4">
+          {Array.from({ length: cartonCount }, (_, i) => i + 1).map((num) => (
+            <button
+              key={num}
+              onClick={() => handleGenerateLabel(num)}
+              disabled={!allChecked}
+              className={`p-2 rounded-lg border-2 text-sm font-medium transition-all ${
+                generatedLabels.includes(num)
+                  ? 'bg-green-100 border-green-500 text-green-700'
+                  : 'bg-gray-50 border-gray-200 text-gray-600 hover:border-blue-300'
+              } ${!allChecked ? 'opacity-50 cursor-not-allowed' : ''}`}
+            >
+              {generatedLabels.includes(num) ? '✓' : ''} Cartón {num}/{cartonCount}
+            </button>
+          ))}
+        </div>
+
+        {/* Generate all labels button */}
+        <Button
+          onClick={handleGenerateAllLabels}
+          disabled={!allChecked}
+          fullWidth
+          variant="secondary"
+        >
+          <Printer className="w-5 h-5 mr-2" />
+          GENERAR TODAS ({cartonCount} etiquetas)
+        </Button>
+      </div>
+
+      {/* Generated labels summary */}
+      {generatedLabels.length > 0 && (
+        <div className="bg-green-50 border border-green-200 rounded-xl p-3 mb-4">
+          <p className="text-sm text-green-700">
+            ✓ {generatedLabels.length} de {cartonCount} etiquetas generadas
+          </p>
+        </div>
+      )}
 
       <div className="flex gap-3">
         <Button variant="secondary" className="flex-1" onClick={() => navigate(-1)}>
@@ -129,9 +204,9 @@ const Packing: React.FC = () => {
         <Button
           className="flex-1"
           disabled={!allChecked}
-          onClick={handleGenerateLabel}
+          onClick={handleFinalize}
         >
-          FINALIZAR
+          FINALIZAR DESPACHO
         </Button>
       </div>
     </div>

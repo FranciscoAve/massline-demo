@@ -85,7 +85,7 @@ const mockProducts: Product[] = [
     description: 'Filtro de aceite para motores diésel',
     category: 'Filtros',
     quantity: 45,
-    location: 'A-03-E2-N1',
+    location: 'Z01-Pa-E2-N1',
     price: 12.50,
   },
   {
@@ -95,7 +95,7 @@ const mockProducts: Product[] = [
     description: 'Juego completo de pastillas',
     category: 'Frenos',
     quantity: 28,
-    location: 'A-05-E1-N2',
+    location: 'Z01-Pe-E1-N2',
     price: 45.00,
   },
   {
@@ -105,7 +105,7 @@ const mockProducts: Product[] = [
     description: 'Set de 4 bujías de platino',
     category: 'Motor',
     quantity: 15,
-    location: 'B-02-E3-N1',
+    location: 'Z02-Pb-E3-N1',
     price: 28.00,
   },
 ];

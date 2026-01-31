@@ -70,7 +70,7 @@ export interface OrderProduct {
 // Location types
 export interface Location {
   id: string;
-  code: string; // e.g., "A-03-E2-N1"
+  code: string; // e.g., "Z01-Pa-E2-N1" (Zona-Pasillo-Estante-Nivel)
   zone: string;
   aisle: string;
   shelf: string;
