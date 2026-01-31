@@ -42,37 +42,42 @@ const mockUsers: { [key: string]: { password: string; user: User } } = {
   },
 };
 
-// Mock tasks
+// Mock tasks - vinculadas a órdenes reales en mockData.ts
 const mockTasks: Task[] = [
   {
     id: '1',
     type: 'dispatch',
-    title: 'Orden #12345',
-    description: 'Tienda Norte - 5 productos',
+    title: 'Despacho DP-2025-0145',
+    description: 'Tienda Centro - Local 5 - 5 productos',
     priority: 'urgent',
     status: 'pending',
     assignedTo: '2',
-    createdAt: new Date(Date.now() - 15 * 60 * 1000), // 15 min ago
+    createdAt: new Date(Date.now() - 15 * 60 * 1000),
+    orderId: '1', // Vincula a mockOrders[0]
+    orderNumber: 'DP-2025-0145',
   },
   {
     id: '2',
     type: 'reception',
-    title: 'Recepción #OC-2025-001',
+    title: 'Recepción OC-2025-001234',
     description: 'Proveedor AutoParts - 12 productos',
     priority: 'normal',
     status: 'pending',
     assignedTo: '2',
-    createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
+    createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
+    orderNumber: 'OC-2025-001234',
   },
   {
     id: '3',
     type: 'dispatch',
-    title: 'Orden #12346',
-    description: 'Tienda Sur - 8 productos',
-    priority: 'high',
+    title: 'Despacho DP-2025-0149',
+    description: 'Cliente VIP - Empresa ABC - 2 productos',
+    priority: 'urgent',
     status: 'pending',
     assignedTo: '2',
-    createdAt: new Date(Date.now() - 30 * 60 * 1000), // 30 min ago
+    createdAt: new Date(Date.now() - 30 * 60 * 1000),
+    orderId: '5', // Vincula a mockOrders[4]
+    orderNumber: 'DP-2025-0149',
   },
 ];
 

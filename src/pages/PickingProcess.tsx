@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, MoreVertical, MapPin, ChevronDown, Camera, Minus, Plus, CheckCircle2, Package, X } from 'lucide-react';
+import { ArrowLeft, MoreVertical, MapPin, ChevronDown, Camera, Minus, Plus, CheckCircle2, Package, X, AlertTriangle, Bell } from 'lucide-react';
 import { QRScannerWrapper } from '../components/scanner/QRScannerWrapper';
 import Button from '../components/ui/Button';
 import { mockOrders, type PickingItem } from '../data/mockData';
@@ -74,6 +74,7 @@ const PickingProcess: React.FC = () => {
   const [selectedShelfProduct, setSelectedShelfProduct] = useState<ShelfProduct | null>(null);
   const [quantity, setQuantity] = useState(0);
   const [shelfInventory, setShelfInventory] = useState(mockShelfInventory);
+  const [stockAlertSent, setStockAlertSent] = useState<Record<string, boolean>>({});
 
   if (!order) {
     return <div className="min-h-screen flex items-center justify-center text-gray-500">Orden no encontrada</div>;
@@ -525,9 +526,33 @@ const PickingProcess: React.FC = () => {
             {/* Warning si no alcanza */}
             {selectedShelfProduct.availableQuantity < currentItem.requestedQuantity && (
               <div className="bg-yellow-50 border border-yellow-300 rounded-lg px-3 py-2 mb-4">
-                <p className="text-xs text-yellow-800">
-                  Stock insuficiente. Solo hay {selectedShelfProduct.availableQuantity} disponibles de {currentItem.requestedQuantity} solicitados.
-                </p>
+                <div className="flex items-start gap-2">
+                  <AlertTriangle className="w-4 h-4 text-yellow-600 mt-0.5 flex-shrink-0" />
+                  <div className="flex-1">
+                    <p className="text-xs text-yellow-800 font-semibold">
+                      Stock insuficiente
+                    </p>
+                    <p className="text-xs text-yellow-700">
+                      Solo hay {selectedShelfProduct.availableQuantity} disponibles de {currentItem.requestedQuantity} solicitados.
+                    </p>
+                    {stockAlertSent[currentItem.productSku] ? (
+                      <div className="flex items-center gap-1 mt-2 text-green-600">
+                        <CheckCircle2 className="w-3 h-3" />
+                        <span className="text-xs font-medium">Alerta enviada al supervisor</span>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => {
+                          setStockAlertSent(prev => ({ ...prev, [currentItem.productSku]: true }));
+                        }}
+                        className="flex items-center gap-1 mt-2 text-xs font-medium text-yellow-800 bg-yellow-200 hover:bg-yellow-300 px-2 py-1 rounded-lg transition-colors"
+                      >
+                        <Bell className="w-3 h-3" />
+                        Notificar a supervisor
+                      </button>
+                    )}
+                  </div>
+                </div>
               </div>
             )}
 

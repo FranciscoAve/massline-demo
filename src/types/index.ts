@@ -32,6 +32,8 @@ export interface Task {
   assignedTo: string;
   createdAt: Date;
   dueDate?: Date;
+  orderId?: string; // ID de la orden asociada (para dispatch/reception)
+  orderNumber?: string; // Número de orden para mostrar
 }
 
 // Product types

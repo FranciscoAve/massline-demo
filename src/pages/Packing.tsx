@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { CheckCircle2, Camera, Printer, Package } from 'lucide-react';
+import { CheckCircle2, Camera, Printer, Package, AlertTriangle, X } from 'lucide-react';
 import Button from '../components/ui/Button';
 import { mockOrders } from '../data/mockData';
 import { generateLabelFromOrder } from '../utils/dispatchLabelPdf';
@@ -16,6 +16,9 @@ const Packing: React.FC = () => {
   const [photo, setPhoto] = useState<string | null>(null);
   const [cartonCount, setCartonCount] = useState(1);
   const [generatedLabels, setGeneratedLabels] = useState<number[]>([]);
+  const [showIssueModal, setShowIssueModal] = useState(false);
+  const [issueReported, setIssueReported] = useState(false);
+  const [issueType, setIssueType] = useState<string | null>(null);
 
   const order = mockOrders.find(o => o.id === orderId);
   if (!order) return <div>Order not found</div>;
@@ -24,6 +27,8 @@ const Packing: React.FC = () => {
   const totalUnits = order.items.reduce((sum, item) => sum + item.requestedQuantity, 0);
 
   const allChecked = Object.values(checklist).every(v => v);
+  // Permitir continuar si todo está verificado O si se reportó un problema
+  const canProceed = allChecked || issueReported;
 
   const handleGenerateLabel = (cartonNumber: number) => {
     generateLabelFromOrder(order, cartonNumber, cartonCount);
@@ -74,22 +79,11 @@ const Packing: React.FC = () => {
         </div>
       </div>
 
-      {/* Instructions */}
-      <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-4 mb-4">
-        <p className="text-sm font-semibold text-gray-900 mb-2">📋 INSTRUCCIONES</p>
-        <div className="bg-yellow-50 border-l-4 border-yellow-400 p-3 rounded mb-2">
-          <p className="text-sm text-yellow-800">
-            ⚠️ Notas especiales: "Empacar por separado las bujías"
-          </p>
-        </div>
-        <p className="text-sm text-gray-700">Paquetes sugeridos: 2</p>
-      </div>
-
       {/* Checklist */}
       <div className="bg-white rounded-xl shadow-sm p-4 mb-4">
-        <p className="text-sm font-semibold text-gray-700 mb-3">Verificación:</p>
+        <p className="text-sm font-semibold text-gray-700 mb-3">Verificación antes de empacar:</p>
         {[
-          { key: 'packed', label: 'Productos empacados' },
+          { key: 'packed', label: 'Productos empacados correctamente' },
           { key: 'verified', label: 'Cantidades verificadas' },
           { key: 'noDamage', label: 'Sin daños visibles' },
         ].map(item => (
@@ -105,7 +99,75 @@ const Packing: React.FC = () => {
             <span className="text-gray-700">{item.label}</span>
           </label>
         ))}
+
+        {/* Report issue button when not all checked */}
+        {!allChecked && !issueReported && (
+          <button
+            onClick={() => setShowIssueModal(true)}
+            className="mt-3 w-full flex items-center justify-center gap-2 py-2 px-4 bg-yellow-50 border border-yellow-300 rounded-lg text-yellow-800 text-sm font-medium hover:bg-yellow-100 transition-colors"
+          >
+            <AlertTriangle className="w-4 h-4" />
+            Reportar problema
+          </button>
+        )}
+
+        {/* Issue reported confirmation */}
+        {issueReported && (
+          <div className="mt-3 flex items-center gap-2 py-2 px-4 bg-orange-50 border border-orange-200 rounded-lg">
+            <AlertTriangle className="w-4 h-4 text-orange-500" />
+            <span className="text-sm text-orange-700">
+              Problema reportado: <strong>{issueType}</strong>
+            </span>
+          </div>
+        )}
       </div>
+
+      {/* Issue Report Modal */}
+      {showIssueModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl w-full max-w-sm p-5">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold text-gray-900">Reportar Problema</h3>
+              <button
+                onClick={() => setShowIssueModal(false)}
+                className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-gray-600"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <p className="text-sm text-gray-600 mb-4">
+              Selecciona el tipo de problema encontrado:
+            </p>
+            <div className="space-y-2">
+              {[
+                'Producto dañado',
+                'Cantidad incorrecta',
+                'Producto equivocado',
+                'Empaque defectuoso',
+                'Otro problema',
+              ].map((issue) => (
+                <button
+                  key={issue}
+                  onClick={() => {
+                    setIssueType(issue);
+                    setIssueReported(true);
+                    setShowIssueModal(false);
+                  }}
+                  className="w-full py-3 px-4 text-left text-sm bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  {issue}
+                </button>
+              ))}
+            </div>
+            <button
+              onClick={() => setShowIssueModal(false)}
+              className="mt-4 w-full py-2 text-sm text-gray-500 hover:text-gray-700"
+            >
+              Cancelar
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Photo */}
       <div className="bg-white rounded-xl shadow-sm p-4 mb-4">
@@ -164,12 +226,12 @@ const Packing: React.FC = () => {
             <button
               key={num}
               onClick={() => handleGenerateLabel(num)}
-              disabled={!allChecked}
+              disabled={!canProceed}
               className={`p-2 rounded-lg border-2 text-sm font-medium transition-all ${
                 generatedLabels.includes(num)
                   ? 'bg-green-100 border-green-500 text-green-700'
                   : 'bg-gray-50 border-gray-200 text-gray-600 hover:border-blue-300'
-              } ${!allChecked ? 'opacity-50 cursor-not-allowed' : ''}`}
+              } ${!canProceed ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
               {generatedLabels.includes(num) ? '✓' : ''} Cartón {num}/{cartonCount}
             </button>
@@ -179,7 +241,7 @@ const Packing: React.FC = () => {
         {/* Generate all labels button */}
         <Button
           onClick={handleGenerateAllLabels}
-          disabled={!allChecked}
+          disabled={!canProceed}
           fullWidth
           variant="secondary"
         >
@@ -203,7 +265,7 @@ const Packing: React.FC = () => {
         </Button>
         <Button
           className="flex-1"
-          disabled={!allChecked}
+          disabled={!canProceed}
           onClick={handleFinalize}
         >
           FINALIZAR DESPACHO

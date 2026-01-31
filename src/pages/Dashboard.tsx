@@ -276,10 +276,6 @@ const Dashboard: React.FC = () => {
                 <Card
                   key={task.id}
                   className="cursor-pointer hover:shadow-md transition-shadow"
-                  onClick={() => {
-                    if (task.type === 'reception') navigate('/reception');
-                    if (task.type === 'dispatch') navigate('/dispatch');
-                  }}
                 >
                   <div className="flex items-start gap-3">
                     <div
@@ -314,7 +310,25 @@ const Dashboard: React.FC = () => {
                         <span className="text-xs text-text-tertiary">
                           {formatRelativeTime(task.createdAt)}
                         </span>
-                        <Button size="sm" variant="primary">
+                        <Button
+                          size="sm"
+                          variant="primary"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (task.type === 'dispatch' && task.orderId) {
+                              // Navegar directamente al picking de esta orden
+                              navigate(`/dispatch/picking/${task.orderId}`);
+                            } else if (task.type === 'reception') {
+                              // Navegar a recepción con la orden pre-cargada
+                              navigate('/reception/start', {
+                                state: { orderNumber: task.orderNumber },
+                              });
+                            } else {
+                              // Fallback a lista general
+                              navigate(task.type === 'dispatch' ? '/dispatch/orders' : '/reception/start');
+                            }
+                          }}
+                        >
                           Iniciar
                         </Button>
                       </div>
