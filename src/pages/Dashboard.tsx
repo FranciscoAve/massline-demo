@@ -341,14 +341,6 @@ const Dashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* FAB - QR Scanner */}
-      <button
-        className="fixed bottom-20 right-5 h-16 w-16 bg-primary text-white rounded-full shadow-fab flex items-center justify-center hover:bg-primary-dark active:scale-95 transition-all z-40"
-        aria-label="Escanear QR"
-      >
-        <QrCode className="h-8 w-8" />
-      </button>
-
       {/* Bottom Navigation */}
       <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-border-light px-2 py-2 z-50">
         <div className="flex items-center justify-around">

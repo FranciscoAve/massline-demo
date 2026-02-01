@@ -1,8 +1,9 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { ArrowLeft, Search, Plus, Minus, Trash2, Package, X } from 'lucide-react';
+import { ArrowLeft, Search, Plus, Minus, Trash2, Package, X, ScanBarcode } from 'lucide-react';
 import Stepper from '../components/navigation/Stepper';
 import Button from '../components/ui/Button';
+import { QRScannerWrapper } from '../components/scanner/QRScannerWrapper';
 import { mockProducts } from '../data/mockData';
 import type { Product } from '../data/mockData';
 
@@ -29,6 +30,7 @@ const ProductScanning: React.FC = () => {
   const [showSearch, setShowSearch] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [quantityInput, setQuantityInput] = useState('1');
+  const [showScanner, setShowScanner] = useState(false);
 
   // Filtrar productos por búsqueda
   const searchResults = useMemo(() => {
@@ -47,6 +49,27 @@ const ProductScanning: React.FC = () => {
     setSelectedProduct(product);
     setSearchQuery('');
     setQuantityInput('1');
+  };
+
+  // Manejar escaneo de código de barras
+  const handleBarcodeScan = (barcode: string) => {
+    // Buscar producto por SKU (el código de barras es el SKU)
+    let sku = barcode;
+    if (barcode.startsWith('SS:P:')) {
+      sku = barcode.substring(5);
+    }
+
+    const product = mockProducts.find(p => p.sku.toLowerCase() === sku.toLowerCase());
+
+    if (product) {
+      setSelectedProduct(product);
+      setQuantityInput('1');
+      setShowScanner(false);
+      setShowSearch(false);
+    } else {
+      alert(`Producto no encontrado: ${sku}`);
+      setShowScanner(false);
+    }
   };
 
   // Agregar producto a la lista de recibo
@@ -127,31 +150,41 @@ const ProductScanning: React.FC = () => {
       <div className="flex-1 p-4 pb-44 overflow-y-auto">
         {/* Search Zone */}
         <div className="bg-white rounded-xl shadow-sm p-4 mb-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Buscar producto por nombre o SKU..."
-              value={searchQuery}
-              onChange={(e) => {
-                setSearchQuery(e.target.value);
-                setShowSearch(true);
-                setSelectedProduct(null);
-              }}
-              onFocus={() => setShowSearch(true)}
-              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl text-base focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none"
-            />
-            {searchQuery && (
-              <button
-                onClick={() => {
-                  setSearchQuery('');
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Buscar producto por nombre o SKU..."
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setShowSearch(true);
                   setSelectedProduct(null);
                 }}
-                className="absolute right-3 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center text-gray-400"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            )}
+                onFocus={() => setShowSearch(true)}
+                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl text-base focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => {
+                    setSearchQuery('');
+                    setSelectedProduct(null);
+                  }}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center text-gray-400"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+            {/* Botón de escaneo de código de barras */}
+            <button
+              onClick={() => setShowScanner(true)}
+              className="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center active:scale-95 transition-transform flex-shrink-0"
+              title="Escanear código de barras"
+            >
+              <ScanBarcode className="w-6 h-6 text-white" />
+            </button>
           </div>
 
           {/* Search Results */}
@@ -343,6 +376,18 @@ const ProductScanning: React.FC = () => {
           CONTINUAR
         </Button>
       </div>
+
+      {/* Barcode Scanner Modal */}
+      {showScanner && (
+        <QRScannerWrapper
+          onScan={handleBarcodeScan}
+          onClose={() => setShowScanner(false)}
+          title="Escanear Código de Barras"
+          subtitle="Escanea el código del producto"
+          expectedType="product"
+          simulateValue={mockProducts[0]?.sku || 'REP-12345'}
+        />
+      )}
     </div>
   );
 };

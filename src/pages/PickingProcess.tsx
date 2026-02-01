@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, MoreVertical, MapPin, ChevronDown, Camera, Minus, Plus, CheckCircle2, Package, X, AlertTriangle, Bell } from 'lucide-react';
+import { ArrowLeft, MapPin, ScanBarcode, Minus, Plus, CheckCircle2, Package, X, AlertTriangle, Bell } from 'lucide-react';
 import { QRScannerWrapper } from '../components/scanner/QRScannerWrapper';
 import Button from '../components/ui/Button';
 import { mockOrders, type PickingItem } from '../data/mockData';
@@ -58,7 +58,26 @@ const mockShelfInventory: Record<string, ShelfProduct[]> = {
   ],
 };
 
-type PickingStep = 'idle' | 'scanning' | 'shelf_products' | 'quantity_confirm';
+// Parsear ubicación para ordenar
+const parseLocation = (loc: string) => {
+  const parts = loc.split('-');
+  return {
+    zona: parseInt(parts[0]?.replace('Z', '') || '0'),
+    pasillo: parts[1]?.replace('P', '') || '',
+    estante: parseInt(parts[2]?.replace('E', '') || '0'),
+    nivel: parseInt(parts[3]?.replace('N', '') || '0'),
+  };
+};
+
+// Formatear ubicación para mostrar
+const formatLocation = (loc: string) => {
+  const parts = loc.split('-');
+  const zona = parts[0]?.replace('Z', '') || '';
+  const pasillo = parts[1]?.replace('P', '').toUpperCase() || '';
+  const estante = parts[2]?.replace('E', '') || '';
+  const nivel = parts[3]?.replace('N', '') || '';
+  return `Zona ${zona} - Pasillo ${pasillo} - Estante ${estante} - Nivel ${nivel}`;
+};
 
 const PickingProcess: React.FC = () => {
   const { orderId } = useParams();
@@ -67,72 +86,86 @@ const PickingProcess: React.FC = () => {
   const order = mockOrders.find(o => o.id === orderId);
 
   const [items, setItems] = useState<PickingItem[]>(order?.items || []);
-  const [currentItemIndex, setCurrentItemIndex] = useState(0);
-  const [step, setStep] = useState<PickingStep>('idle');
-  const [scannedLocation, setScannedLocation] = useState<string | null>(null);
-  const [shelfProducts, setShelfProducts] = useState<ShelfProduct[]>([]);
-  const [selectedShelfProduct, setSelectedShelfProduct] = useState<ShelfProduct | null>(null);
-  const [quantity, setQuantity] = useState(0);
   const [shelfInventory, setShelfInventory] = useState(mockShelfInventory);
   const [stockAlertSent, setStockAlertSent] = useState<Record<string, boolean>>({});
+
+  // Estado para escaneo
+  const [scanningItemIndex, setScanningItemIndex] = useState<number | null>(null);
+  const [showQuantityModal, setShowQuantityModal] = useState(false);
+  const [selectedItemIndex, setSelectedItemIndex] = useState<number | null>(null);
+  const [quantity, setQuantity] = useState(0);
 
   if (!order) {
     return <div className="min-h-screen flex items-center justify-center text-gray-500">Orden no encontrada</div>;
   }
 
-  const currentItem = items[currentItemIndex];
-  const completedItems = items.filter(item => item.status === 'picked').length;
-  const pendingItems = items.filter(item => item.status === 'pending').length;
+  // Ordenar items por ubicación
+  const sortedItems = useMemo(() => {
+    return [...items].sort((a, b) => {
+      const locA = parseLocation(a.locationCode);
+      const locB = parseLocation(b.locationCode);
 
-  // Paso 1: Abrir escáner QR para la estantería
-  const handleStartScan = () => {
-    setStep('scanning');
+      if (locA.zona !== locB.zona) return locA.zona - locB.zona;
+      if (locA.pasillo !== locB.pasillo) return locA.pasillo.localeCompare(locB.pasillo);
+      if (locA.estante !== locB.estante) return locA.estante - locB.estante;
+      return locA.nivel - locB.nivel;
+    });
+  }, [items]);
+
+  const completedItems = items.filter(item => item.status === 'picked').length;
+  const allCompleted = completedItems === items.length;
+
+  // Obtener stock disponible para un item
+  const getAvailableStock = (item: PickingItem) => {
+    const productsOnShelf = shelfInventory[item.locationCode] || [];
+    const product = productsOnShelf.find(p => p.sku === item.productSku);
+    return product?.availableQuantity ?? 0;
   };
 
-  // Paso 2: Procesar resultado del escaneo QR
+  // Iniciar escaneo de estantería para un item
+  const handleStartScan = (index: number) => {
+    setScanningItemIndex(index);
+  };
+
+  // Procesar resultado del escaneo
   const handleScanResult = (qrCode: string) => {
-    // Extraer código de ubicación (soporta formato SS:L:CODE o directo)
+    if (scanningItemIndex === null) return;
+
+    const item = sortedItems[scanningItemIndex];
     let locationCode = qrCode;
     if (qrCode.startsWith('SS:L:')) {
       locationCode = qrCode.substring(5);
     }
 
     // Verificar que la ubicación escaneada coincide con la esperada
-    if (locationCode !== currentItem.locationCode) {
-      alert(`Ubicación incorrecta. Escaneó: ${locationCode}\nEsperada: ${currentItem.locationCode}`);
-      setStep('idle');
+    if (locationCode !== item.locationCode) {
+      alert(`Ubicación incorrecta.\nEscaneó: ${locationCode}\nEsperada: ${item.locationCode}`);
+      setScanningItemIndex(null);
       return;
     }
 
-    // Obtener productos almacenados en esta ubicación
-    const productsOnShelf = shelfInventory[locationCode] || [];
-    setScannedLocation(locationCode);
-    setShelfProducts(productsOnShelf);
-    setStep('shelf_products');
+    // Abrir modal de cantidad
+    setScanningItemIndex(null);
+    setSelectedItemIndex(scanningItemIndex);
+    const availableStock = getAvailableStock(item);
+    setQuantity(Math.min(item.requestedQuantity, availableStock));
+    setShowQuantityModal(true);
   };
 
-  // Paso 3: Seleccionar producto del estante
-  const handleSelectShelfProduct = (product: ShelfProduct) => {
-    // Verificar que es el producto correcto de la orden
-    if (product.sku !== currentItem.productSku) {
-      alert(`Producto incorrecto. Seleccionó: ${product.sku}\nBuscando: ${currentItem.productSku} (${currentItem.productName})`);
-      return;
-    }
-
-    setSelectedShelfProduct(product);
-    // Pre-llenar con la cantidad de la orden de despacho
-    setQuantity(Math.min(currentItem.requestedQuantity, product.availableQuantity));
-    setStep('quantity_confirm');
-  };
-
-  // Paso 4: Confirmar cantidad y restar del inventario
+  // Confirmar cantidad y marcar como recolectado
   const handleConfirmQuantity = () => {
-    if (!selectedShelfProduct || !scannedLocation) return;
+    if (selectedItemIndex === null) return;
+
+    const item = sortedItems[selectedItemIndex];
+
+    // Encontrar el índice real en el array original
+    const originalIndex = items.findIndex(i => i.productSku === item.productSku && i.locationCode === item.locationCode);
+    if (originalIndex === -1) return;
 
     // Actualizar item como recolectado
     const updatedItems = [...items];
-    updatedItems[currentItemIndex] = {
-      ...currentItem,
+    updatedItems[originalIndex] = {
+      ...items[originalIndex],
       status: 'picked',
       pickedQuantity: quantity,
     };
@@ -140,41 +173,32 @@ const PickingProcess: React.FC = () => {
 
     // Restar cantidad del inventario del estante
     const updatedInventory = { ...shelfInventory };
-    const locationProducts = [...(updatedInventory[scannedLocation] || [])];
-    const productIndex = locationProducts.findIndex(p => p.sku === selectedShelfProduct.sku);
+    const locationProducts = [...(updatedInventory[item.locationCode] || [])];
+    const productIndex = locationProducts.findIndex(p => p.sku === item.productSku);
     if (productIndex >= 0) {
       locationProducts[productIndex] = {
         ...locationProducts[productIndex],
         availableQuantity: locationProducts[productIndex].availableQuantity - quantity,
       };
-      updatedInventory[scannedLocation] = locationProducts;
+      updatedInventory[item.locationCode] = locationProducts;
       setShelfInventory(updatedInventory);
     }
 
-    // Resetear estado
-    setStep('idle');
-    setScannedLocation(null);
-    setShelfProducts([]);
-    setSelectedShelfProduct(null);
-    setQuantity(0);
-
-    // Mover al siguiente item o finalizar
-    setTimeout(() => {
-      if (currentItemIndex < items.length - 1) {
-        setCurrentItemIndex(currentItemIndex + 1);
-      } else {
-        navigate(`/dispatch/packing/${orderId}`);
-      }
-    }, 1000);
-  };
-
-  const handleCancelStep = () => {
-    setStep('idle');
-    setScannedLocation(null);
-    setShelfProducts([]);
-    setSelectedShelfProduct(null);
+    // Cerrar modal
+    setShowQuantityModal(false);
+    setSelectedItemIndex(null);
     setQuantity(0);
   };
+
+  const handleCancelModal = () => {
+    setShowQuantityModal(false);
+    setSelectedItemIndex(null);
+    setQuantity(0);
+    setScanningItemIndex(null);
+  };
+
+  const selectedItem = selectedItemIndex !== null ? sortedItems[selectedItemIndex] : null;
+  const selectedAvailableStock = selectedItem ? getAvailableStock(selectedItem) : 0;
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -189,157 +213,120 @@ const PickingProcess: React.FC = () => {
           </button>
           <div className="flex-1 text-center">
             <h1 className="text-base font-bold text-gray-900">#{order.orderNumber}</h1>
-            <div className="flex items-center justify-center gap-2 mt-0.5">
-              <div className="h-1.5 bg-gray-200 rounded-full w-20">
-                <div
-                  className="h-full bg-blue-500 rounded-full transition-all"
-                  style={{ width: `${(completedItems / items.length) * 100}%` }}
-                />
-              </div>
-              <span className="text-xs text-gray-600">
-                {completedItems}/{items.length}
-              </span>
-            </div>
+            <p className="text-xs text-gray-500">{order.destination.name}</p>
           </div>
-          <button className="w-10 h-10 flex items-center justify-center">
-            <MoreVertical className="w-6 h-6 text-gray-500" />
-          </button>
+          <div className="w-10" />
         </div>
-      </div>
 
-      {/* Order Info */}
-      <div className="bg-white border-b border-gray-200 px-4 py-2">
-        <button className="w-full flex items-center justify-between text-sm active:bg-gray-50 py-1">
-          <span className="text-gray-700">
-            {order.destination.name} | {items.length} items
-          </span>
-          <ChevronDown className="w-4 h-4 text-gray-500" />
-        </button>
-      </div>
-
-      {/* Content */}
-      <div className="flex-1 p-4 pb-28 overflow-y-auto">
-        {/* Current Item Card */}
-        <div className="mb-4">
-          <p className="text-sm text-gray-600 mb-2 text-center">
-            PRODUCTO {currentItemIndex + 1} de {items.length}
-          </p>
-
-          <div className="bg-white rounded-xl shadow-md p-4">
-            {/* Picked indicator */}
-            {currentItem.status === 'picked' && (
-              <div className="flex items-center gap-2 bg-green-50 rounded-lg px-3 py-2 mb-4">
-                <CheckCircle2 className="w-5 h-5 text-green-500" />
-                <span className="text-sm font-semibold text-green-700">
-                  Recolectado: {currentItem.pickedQuantity} unidades
-                </span>
-              </div>
-            )}
-
-            {/* Product Image */}
-            <img
-              src={currentItem.productImage}
-              alt={currentItem.productName}
-              className="w-full h-48 object-cover rounded-lg bg-gray-100 mb-4"
+        {/* Progress bar */}
+        <div className="mt-2 flex items-center gap-2">
+          <div className="flex-1 h-2 bg-gray-200 rounded-full">
+            <div
+              className="h-full bg-blue-500 rounded-full transition-all"
+              style={{ width: `${(completedItems / items.length) * 100}%` }}
             />
-
-            {/* Product Info */}
-            <h2 className="text-lg font-bold text-gray-900 mb-1">
-              {currentItem.productName}
-            </h2>
-            <p className="text-sm text-gray-500 font-mono mb-4">{currentItem.productSku}</p>
-
-            {/* Quantity Box */}
-            <div className="bg-blue-50 rounded-xl p-4 mb-4">
-              <p className="text-sm text-gray-600 mb-1">Cantidad a despachar:</p>
-              <div className="bg-white rounded-lg px-4 py-3 inline-flex flex-col items-center min-w-[80px]">
-                <span className="text-3xl font-bold text-gray-900">
-                  {currentItem.requestedQuantity}
-                </span>
-                <span className="text-xs text-gray-500">unidades</span>
-              </div>
-            </div>
-
-            {/* Location Info */}
-            <div className="bg-gray-50 rounded-xl p-4">
-              <p className="text-xs font-semibold text-gray-600 mb-2">UBICACION DEL PRODUCTO:</p>
-              <div className="bg-white rounded-lg p-3 mb-2">
-                <p className="text-xl font-bold font-mono text-blue-600 text-center mb-1">
-                  {currentItem.locationCode}
-                </p>
-                {(() => {
-                  // Parsear formato Z01-Pa-E3-N2
-                  const parts = currentItem.locationCode.split('-');
-                  const zona = parts[0]?.replace('Z', '') || '';
-                  const pasillo = parts[1]?.replace('P', '').toUpperCase() || '';
-                  const estante = parts[2]?.replace('E', '') || '';
-                  const nivel = parts[3]?.replace('N', '') || '';
-                  return (
-                    <p className="text-sm text-gray-600 text-center">
-                      ZONA {zona} - PASILLO {pasillo} - ESTANTE {estante} - NIVEL {nivel}
-                    </p>
-                  );
-                })()}
-              </div>
-
-              {currentItem.distance && (
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <MapPin className="w-4 h-4" />
-                  <span>{currentItem.distance} metros ({Math.round(currentItem.distance * 1.3)} pasos)</span>
-                </div>
-              )}
-            </div>
-
-            {/* Stock disponible en esa ubicación */}
-            <div className="mt-4 text-sm text-gray-600">
-              <p>
-                Stock en {currentItem.locationCode}:{' '}
-                <span className="font-semibold">
-                  {(shelfInventory[currentItem.locationCode] || []).find(p => p.sku === currentItem.productSku)?.availableQuantity ?? '?'} unidades
-                </span>
-              </p>
-            </div>
-
-            {/* Scan Button */}
-            {currentItem.status !== 'picked' && (
-              <div className="flex gap-2 mt-4">
-                <button
-                  className="flex-1 py-3 border-2 border-gray-300 rounded-xl text-gray-700 font-semibold active:scale-95 transition-transform"
-                  onClick={() => alert('Vista de mapa (próximamente)')}
-                >
-                  VER MAPA
-                </button>
-                <button
-                  onClick={handleStartScan}
-                  className="flex-1 py-3 bg-blue-500 text-white rounded-xl font-bold active:scale-95 transition-transform flex items-center justify-center gap-2"
-                >
-                  <Camera className="w-5 h-5" />
-                  ESCANEAR ESTANTERIA
-                </button>
-              </div>
-            )}
           </div>
+          <span className="text-xs text-gray-600 font-medium">
+            {completedItems}/{items.length}
+          </span>
+        </div>
+      </div>
+
+      {/* Lista de productos ordenada por ubicación */}
+      <div className="flex-1 p-4 pb-28 overflow-y-auto">
+        <p className="text-sm text-gray-600 mb-3 font-medium">
+          Productos a despachar (ordenados por ubicación):
+        </p>
+
+        <div className="space-y-3">
+          {sortedItems.map((item, index) => {
+            const availableStock = getAvailableStock(item);
+            const isPicked = item.status === 'picked';
+            const hasStockIssue = availableStock < item.requestedQuantity;
+
+            return (
+              <div
+                key={`${item.productSku}-${item.locationCode}`}
+                className={`bg-white rounded-xl shadow-sm overflow-hidden border-2 ${
+                  isPicked ? 'border-green-400 bg-green-50' : hasStockIssue ? 'border-yellow-300' : 'border-transparent'
+                }`}
+              >
+                {/* Ubicación header */}
+                <div className={`px-4 py-2 flex items-center gap-2 ${isPicked ? 'bg-green-100' : 'bg-gray-50'}`}>
+                  <MapPin className={`w-4 h-4 ${isPicked ? 'text-green-600' : 'text-blue-500'}`} />
+                  <span className="text-sm font-bold font-mono text-blue-600">{item.locationCode}</span>
+                  <span className="text-xs text-gray-500">• {formatLocation(item.locationCode)}</span>
+                </div>
+
+                <div className="p-4">
+                  <div className="flex gap-3">
+                    {/* Imagen */}
+                    <img
+                      src={item.productImage}
+                      alt={item.productName}
+                      className="w-16 h-16 rounded-lg bg-gray-100 object-cover flex-shrink-0"
+                    />
+
+                    {/* Info del producto */}
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-sm font-bold text-gray-900 truncate">{item.productName}</h3>
+                      <p className="text-xs text-gray-500 font-mono mb-1">{item.productSku}</p>
+
+                      {/* Cantidades */}
+                      <div className="flex items-center gap-3 text-xs">
+                        <span className="text-gray-600">
+                          Pedido: <strong className="text-blue-600">{item.requestedQuantity}</strong>
+                        </span>
+                        <span className={`${availableStock < item.requestedQuantity ? 'text-red-600' : 'text-green-600'}`}>
+                          Disponible: <strong>{availableStock}</strong>
+                        </span>
+                      </div>
+
+                      {/* Alerta de stock */}
+                      {hasStockIssue && !isPicked && (
+                        <div className="mt-2 flex items-center gap-1 text-xs text-yellow-700">
+                          <AlertTriangle className="w-3 h-3" />
+                          <span>Stock insuficiente</span>
+                        </div>
+                      )}
+
+                      {/* Estado de recolección */}
+                      {isPicked && (
+                        <div className="mt-2 flex items-center gap-1 text-xs text-green-600">
+                          <CheckCircle2 className="w-4 h-4" />
+                          <span className="font-semibold">Recolectado: {item.pickedQuantity} unidades</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Botón de escaneo */}
+                    {!isPicked && (
+                      <button
+                        onClick={() => handleStartScan(index)}
+                        className="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center active:scale-95 transition-transform flex-shrink-0 self-center"
+                        title="Escanear estantería"
+                      >
+                        <ScanBarcode className="w-6 h-6 text-white" />
+                      </button>
+                    )}
+
+                    {isPicked && (
+                      <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center flex-shrink-0 self-center">
+                        <CheckCircle2 className="w-6 h-6 text-green-500" />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
         </div>
 
-        {/* Next Items Preview */}
-        {currentItemIndex < items.length - 1 && (
-          <div className="mb-4">
-            <p className="text-sm text-gray-600 mb-2">Próximos:</p>
-            <div className="space-y-2">
-              {items.slice(currentItemIndex + 1, currentItemIndex + 3).map((item, idx) => (
-                <div
-                  key={idx}
-                  className={`bg-white rounded-lg p-2 text-sm flex items-center gap-2 ${
-                    item.status === 'picked' ? 'text-green-600' : 'text-gray-600'
-                  }`}
-                >
-                  <span className="font-semibold">{currentItemIndex + idx + 2}.</span>
-                  <span className="flex-1 truncate">{item.productName}</span>
-                  <span className="text-xs text-blue-600 font-mono">{item.locationCode}</span>
-                  {item.status === 'picked' && <CheckCircle2 className="w-4 h-4 text-green-500" />}
-                </div>
-              ))}
-            </div>
+        {/* Estado vacío */}
+        {sortedItems.length === 0 && (
+          <div className="flex flex-col items-center justify-center py-16 text-center">
+            <Package className="w-16 h-16 text-gray-300 mb-4" />
+            <p className="text-gray-500 font-medium">No hay productos para despachar</p>
           </div>
         )}
       </div>
@@ -348,158 +335,71 @@ const PickingProcess: React.FC = () => {
       <div className="bg-white border-t border-gray-200 p-4 fixed bottom-0 left-0 right-0">
         <div className="flex items-center justify-between mb-2 text-sm">
           <span className="text-gray-600">
-            {completedItems}/{items.length} recolectados | {pendingItems} pendientes
+            {completedItems}/{items.length} recolectados
           </span>
+          {allCompleted && (
+            <span className="text-green-600 font-semibold flex items-center gap-1">
+              <CheckCircle2 className="w-4 h-4" />
+              Todo listo
+            </span>
+          )}
         </div>
-        <div className="flex gap-3">
-          <Button
-            variant="secondary"
-            onClick={() => {
-              if (currentItemIndex > 0) setCurrentItemIndex(currentItemIndex - 1);
-            }}
-            disabled={currentItemIndex === 0}
-            className="flex-1"
-          >
-            Anterior
-          </Button>
-          <Button
-            onClick={() => {
-              if (currentItem.status === 'picked' && currentItemIndex < items.length - 1) {
-                setCurrentItemIndex(currentItemIndex + 1);
-              } else if (completedItems === items.length) {
-                navigate(`/dispatch/packing/${orderId}`);
-              }
-            }}
-            disabled={currentItem.status !== 'picked'}
-            className="flex-1"
-          >
-            {currentItemIndex === items.length - 1 && completedItems === items.length
-              ? 'FINALIZAR'
-              : 'SIGUIENTE'}
-          </Button>
-        </div>
+        <Button
+          onClick={() => navigate(`/dispatch/packing/${orderId}`)}
+          disabled={!allCompleted}
+          fullWidth
+        >
+          {allCompleted ? 'CONTINUAR A EMPAQUE' : `COMPLETAR PICKING (${items.length - completedItems} restantes)`}
+        </Button>
       </div>
 
       {/* QR Scanner Modal */}
-      {step === 'scanning' && (
+      {scanningItemIndex !== null && (
         <QRScannerWrapper
           onScan={handleScanResult}
-          onClose={handleCancelStep}
+          onClose={handleCancelModal}
           title="Escanear Estantería"
-          subtitle={`Buscar: ${currentItem.locationCode}`}
+          subtitle={`Buscar: ${sortedItems[scanningItemIndex]?.locationCode}`}
           expectedType="location"
-          simulateValue={currentItem.locationCode}
+          simulateValue={sortedItems[scanningItemIndex]?.locationCode}
         />
       )}
 
-      {/* Shelf Products Modal - muestra productos almacenados en el estante escaneado */}
-      {step === 'shelf_products' && scannedLocation && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-end justify-center">
-          <div className="bg-white rounded-t-2xl w-full max-h-[85vh] flex flex-col animate-slide-up">
-            {/* Modal Header */}
-            <div className="flex items-center justify-between px-4 py-4 border-b border-gray-200">
+      {/* Quantity Confirmation Modal */}
+      {showQuantityModal && selectedItem && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl w-full max-w-sm p-6">
+            <div className="flex items-center justify-between mb-4">
               <div>
-                <h2 className="text-lg font-bold text-gray-900">Estante {scannedLocation}</h2>
-                <p className="text-sm text-gray-500">Selecciona el producto a despachar</p>
+                <h2 className="text-lg font-bold text-gray-900">Confirmar Cantidad</h2>
+                <p className="text-sm text-gray-500">{selectedItem.locationCode}</p>
               </div>
               <button
-                onClick={handleCancelStep}
-                className="w-10 h-10 flex items-center justify-center text-gray-400"
+                onClick={handleCancelModal}
+                className="w-8 h-8 flex items-center justify-center text-gray-400"
               >
-                <X className="w-6 h-6" />
+                <X className="w-5 h-5" />
               </button>
             </div>
 
-            {/* Products on shelf */}
-            <div className="flex-1 overflow-y-auto p-4">
-              {shelfProducts.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-12 text-center">
-                  <Package className="w-16 h-16 text-gray-300 mb-4" />
-                  <p className="text-gray-500 font-medium">Estante vacío</p>
-                  <p className="text-sm text-gray-400">No hay productos en esta ubicación</p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {/* Indicador del producto buscado */}
-                  <div className="bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 mb-2">
-                    <p className="text-xs text-blue-600 font-semibold mb-1">BUSCANDO:</p>
-                    <p className="text-sm font-bold text-blue-900">{currentItem.productName}</p>
-                    <p className="text-xs text-blue-600 font-mono">{currentItem.productSku} - {currentItem.requestedQuantity} unidades</p>
-                  </div>
-
-                  {shelfProducts.map((product) => {
-                    const isTarget = product.sku === currentItem.productSku;
-                    return (
-                      <button
-                        key={product.sku}
-                        onClick={() => handleSelectShelfProduct(product)}
-                        className={`w-full rounded-xl p-4 flex items-start gap-3 active:scale-[0.98] transition-transform text-left ${
-                          isTarget
-                            ? 'bg-green-50 border-2 border-green-400'
-                            : 'bg-white border border-gray-200'
-                        }`}
-                      >
-                        <img
-                          src={product.image}
-                          alt={product.name}
-                          className="w-14 h-14 rounded-lg bg-gray-100 object-cover flex-shrink-0"
-                        />
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-start justify-between gap-2">
-                            <div className="min-w-0">
-                              <h3 className="text-sm font-bold text-gray-900 truncate">{product.name}</h3>
-                              <p className="text-xs text-gray-500 font-mono">{product.sku}</p>
-                            </div>
-                            {isTarget && (
-                              <span className="text-xs bg-green-500 text-white px-2 py-0.5 rounded-full flex-shrink-0">
-                                Coincide
-                              </span>
-                            )}
-                          </div>
-                          <div className="mt-2 flex items-center gap-2">
-                            <span className="text-sm font-semibold text-gray-700">
-                              Disponible: {product.availableQuantity} unidades
-                            </span>
-                          </div>
-                          {/* Barra de stock */}
-                          <div className="mt-1 h-2 bg-gray-200 rounded-full overflow-hidden">
-                            <div
-                              className={`h-full rounded-full ${
-                                product.availableQuantity > 50 ? 'bg-green-500' :
-                                product.availableQuantity > 20 ? 'bg-yellow-500' : 'bg-red-500'
-                              }`}
-                              style={{ width: `${Math.min((product.availableQuantity / 100) * 100, 100)}%` }}
-                            />
-                          </div>
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Quantity Confirmation Modal */}
-      {step === 'quantity_confirm' && selectedShelfProduct && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl w-full max-w-sm p-6">
-            <div className="text-center mb-4">
-              <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-2">
-                <CheckCircle2 className="w-7 h-7 text-green-500" />
+            {/* Producto info */}
+            <div className="flex items-center gap-3 mb-4 p-3 bg-gray-50 rounded-lg">
+              <img
+                src={selectedItem.productImage}
+                alt={selectedItem.productName}
+                className="w-12 h-12 rounded-lg bg-gray-100 object-cover"
+              />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-gray-900 truncate">{selectedItem.productName}</p>
+                <p className="text-xs text-gray-500 font-mono">{selectedItem.productSku}</p>
               </div>
-              <p className="text-sm font-semibold text-green-600">Producto seleccionado</p>
-              <p className="text-base font-bold text-gray-900 mt-1">{selectedShelfProduct.name}</p>
-              <p className="text-xs text-gray-500 font-mono">{selectedShelfProduct.sku}</p>
             </div>
 
-            <p className="text-center text-gray-700 font-semibold mb-4">
+            {/* Quantity Adjuster */}
+            <p className="text-center text-gray-700 font-semibold mb-3">
               ¿Cuántas unidades despachar?
             </p>
 
-            {/* Quantity Adjuster */}
             <div className="flex items-center justify-center gap-4 mb-4">
               <button
                 onClick={() => setQuantity(Math.max(1, quantity - 1))}
@@ -511,7 +411,7 @@ const PickingProcess: React.FC = () => {
                 <span className="text-4xl font-bold text-gray-900">{quantity}</span>
               </div>
               <button
-                onClick={() => setQuantity(Math.min(selectedShelfProduct.availableQuantity, quantity + 1))}
+                onClick={() => setQuantity(Math.min(selectedAvailableStock, quantity + 1))}
                 className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center active:scale-95 transition-transform"
               >
                 <Plus className="w-5 h-5 text-white" />
@@ -519,12 +419,12 @@ const PickingProcess: React.FC = () => {
             </div>
 
             <div className="flex items-center justify-between text-sm text-gray-600 mb-2">
-              <span>Pedido: <strong>{currentItem.requestedQuantity}</strong></span>
-              <span>Disponible: <strong>{selectedShelfProduct.availableQuantity}</strong></span>
+              <span>Pedido: <strong>{selectedItem.requestedQuantity}</strong></span>
+              <span>Disponible: <strong>{selectedAvailableStock}</strong></span>
             </div>
 
             {/* Warning si no alcanza */}
-            {selectedShelfProduct.availableQuantity < currentItem.requestedQuantity && (
+            {selectedAvailableStock < selectedItem.requestedQuantity && (
               <div className="bg-yellow-50 border border-yellow-300 rounded-lg px-3 py-2 mb-4">
                 <div className="flex items-start gap-2">
                   <AlertTriangle className="w-4 h-4 text-yellow-600 mt-0.5 flex-shrink-0" />
@@ -533,9 +433,9 @@ const PickingProcess: React.FC = () => {
                       Stock insuficiente
                     </p>
                     <p className="text-xs text-yellow-700">
-                      Solo hay {selectedShelfProduct.availableQuantity} disponibles de {currentItem.requestedQuantity} solicitados.
+                      Solo hay {selectedAvailableStock} disponibles de {selectedItem.requestedQuantity} solicitados.
                     </p>
-                    {stockAlertSent[currentItem.productSku] ? (
+                    {stockAlertSent[selectedItem.productSku] ? (
                       <div className="flex items-center gap-1 mt-2 text-green-600">
                         <CheckCircle2 className="w-3 h-3" />
                         <span className="text-xs font-medium">Alerta enviada al supervisor</span>
@@ -543,7 +443,7 @@ const PickingProcess: React.FC = () => {
                     ) : (
                       <button
                         onClick={() => {
-                          setStockAlertSent(prev => ({ ...prev, [currentItem.productSku]: true }));
+                          setStockAlertSent(prev => ({ ...prev, [selectedItem.productSku]: true }));
                         }}
                         className="flex items-center gap-1 mt-2 text-xs font-medium text-yellow-800 bg-yellow-200 hover:bg-yellow-300 px-2 py-1 rounded-lg transition-colors"
                       >
@@ -560,9 +460,9 @@ const PickingProcess: React.FC = () => {
             <div className="bg-gray-50 rounded-lg px-4 py-3 mb-6">
               <p className="text-xs text-gray-500 mb-1">Después del despacho:</p>
               <p className="text-sm font-semibold text-gray-900">
-                {selectedShelfProduct.availableQuantity} - {quantity} ={' '}
-                <span className={`${selectedShelfProduct.availableQuantity - quantity <= 10 ? 'text-red-600' : 'text-green-600'}`}>
-                  {selectedShelfProduct.availableQuantity - quantity} unidades restantes
+                {selectedAvailableStock} - {quantity} ={' '}
+                <span className={`${selectedAvailableStock - quantity <= 10 ? 'text-red-600' : 'text-green-600'}`}>
+                  {selectedAvailableStock - quantity} unidades restantes
                 </span>
               </p>
             </div>
@@ -571,7 +471,7 @@ const PickingProcess: React.FC = () => {
             <div className="flex gap-3">
               <Button
                 variant="secondary"
-                onClick={handleCancelStep}
+                onClick={handleCancelModal}
                 className="flex-1"
               >
                 Cancelar
