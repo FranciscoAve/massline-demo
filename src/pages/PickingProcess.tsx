@@ -95,11 +95,7 @@ const PickingProcess: React.FC = () => {
   const [selectedItemIndex, setSelectedItemIndex] = useState<number | null>(null);
   const [quantity, setQuantity] = useState(0);
 
-  if (!order) {
-    return <div className="min-h-screen flex items-center justify-center text-gray-500">Orden no encontrada</div>;
-  }
-
-  // Ordenar items por ubicación
+  // Ordenar items por ubicación (debe estar antes del return condicional)
   const sortedItems = useMemo(() => {
     return [...items].sort((a, b) => {
       const locA = parseLocation(a.locationCode);
@@ -114,6 +110,10 @@ const PickingProcess: React.FC = () => {
 
   const completedItems = items.filter(item => item.status === 'picked').length;
   const allCompleted = completedItems === items.length;
+
+  if (!order) {
+    return <div className="min-h-screen flex items-center justify-center text-gray-500">Orden no encontrada</div>;
+  }
 
   // Obtener stock disponible para un item
   const getAvailableStock = (item: PickingItem) => {
