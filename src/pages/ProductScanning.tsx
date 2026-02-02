@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { ArrowLeft, Search, Plus, Minus, Trash2, Package, X, ScanBarcode } from 'lucide-react';
+import { ArrowLeft, Search, Plus, Minus, Trash2, Package, X, ScanBarcode, AlertTriangle, CheckCircle2, Bell } from 'lucide-react';
 import Stepper from '../components/navigation/Stepper';
 import Button from '../components/ui/Button';
 import { QRScannerWrapper } from '../components/scanner/QRScannerWrapper';
@@ -13,24 +13,64 @@ interface ReceiptItem {
   name: string;
   image: string;
   category: string;
-  quantity: number;
+  location: string;
+  expectedQuantity: number;
+  confirmedQuantity: number;
 }
+
+// Ubicaciones sugeridas por producto (mock)
+const productLocations: Record<string, string> = {
+  'REP-12345': 'Z01-Pa-E2-N1',
+  'REP-98765': 'Z01-Pa-E2-N2',
+  'REP-55555': 'Z01-Pb-E1-N1',
+  'REP-11111': 'Z01-Pa-E1-N1',
+  'REP-22222': 'Z01-Pa-E1-N2',
+  'REP-33333': 'Z03-Pa-E1-N1',
+  'REP-44444': 'Z02-Pa-E1-N2',
+  'REP-66666': 'Z02-Pb-E3-N2',
+  'REP-77777': 'Z02-Pa-E1-N1',
+  'REP-88888': 'Z02-Pc-E2-N1',
+};
+
+// Mock de productos esperados en una orden de compra (para saber cantidad esperada)
+const mockOrderExpectedProducts: Record<string, { expectedQty: number; location: string }> = {
+  'REP-12345': { expectedQty: 9, location: 'Z01-Pa-E2-N1' },
+  'REP-98765': { expectedQty: 9, location: 'Z01-Pa-E2-N2' },
+  'REP-55555': { expectedQty: 4, location: 'Z01-Pb-E1-N1' },
+  'REP-11111': { expectedQty: 8, location: 'Z01-Pa-E1-N1' },
+  'REP-44444': { expectedQty: 7, location: 'Z02-Pa-E1-N2' },
+  'REP-77777': { expectedQty: 2, location: 'Z02-Pa-E1-N1' },
+  'REP-33333': { expectedQty: 5, location: 'Z03-Pa-E1-N1' },
+};
 
 const ProductScanning: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const orderState = location.state as { orderNumber?: string; supplier?: string; hasOrder?: boolean; reason?: string; order?: { orderNumber: string; supplier: string } } | null;
+  const orderState = location.state as {
+    orderNumber?: string;
+    supplier?: string;
+    hasOrder?: boolean;
+    reason?: string;
+    order?: { orderNumber: string; supplier: string }
+  } | null;
 
   // Extraer datos de orden que vienen de ReceptionStart
+  const hasOrder = orderState?.hasOrder !== false && (orderState?.order || orderState?.orderNumber);
   const orderNumber = orderState?.order?.orderNumber || orderState?.orderNumber || '';
   const supplier = orderState?.order?.supplier || orderState?.supplier || '';
 
+  // Lista de productos recibidos (se agregan uno a uno)
   const [receiptList, setReceiptList] = useState<ReceiptItem[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [showSearch, setShowSearch] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [quantityInput, setQuantityInput] = useState('1');
   const [showScanner, setShowScanner] = useState(false);
+
+  // Estado para notificaciones de problema
+  const [problemNotified, setProblemNotified] = useState<Record<string, boolean>>({});
+  const [showProblemModal, setShowProblemModal] = useState(false);
+  const [problemItemSku, setProblemItemSku] = useState<string | null>(null);
 
   // Filtrar productos por búsqueda
   const searchResults = useMemo(() => {
@@ -53,7 +93,6 @@ const ProductScanning: React.FC = () => {
 
   // Manejar escaneo de código de barras
   const handleBarcodeScan = (barcode: string) => {
-    // Buscar producto por SKU (el código de barras es el SKU)
     let sku = barcode;
     if (barcode.startsWith('SS:P:')) {
       sku = barcode.substring(5);
@@ -62,41 +101,52 @@ const ProductScanning: React.FC = () => {
     const product = mockProducts.find(p => p.sku.toLowerCase() === sku.toLowerCase());
 
     if (product) {
-      setSelectedProduct(product);
-      setQuantityInput('1');
+      // Agregar directamente 1 unidad al escanear
+      addProductToReceipt(product, 1);
       setShowScanner(false);
-      setShowSearch(false);
     } else {
       alert(`Producto no encontrado: ${sku}`);
       setShowScanner(false);
     }
   };
 
-  // Agregar producto a la lista de recibo
-  const handleAddToReceipt = () => {
-    if (!selectedProduct) return;
+  // Función para agregar producto a la lista
+  const addProductToReceipt = (product: Product, qty: number) => {
+    const existingIndex = receiptList.findIndex((item) => item.sku === product.sku);
 
-    const qty = parseInt(quantityInput) || 1;
+    // Obtener cantidad esperada si hay orden
+    const orderExpected = hasOrder ? mockOrderExpectedProducts[product.sku] : null;
+    const expectedQty = orderExpected?.expectedQty || 0;
+    const suggestedLocation = orderExpected?.location || productLocations[product.sku] || 'Z01-Pa-E1-N1';
 
-    // Si ya está en la lista, sumar cantidad
-    const existingIndex = receiptList.findIndex((item) => item.sku === selectedProduct.sku);
     if (existingIndex >= 0) {
+      // Si ya está en la lista, sumar cantidad
       const updated = [...receiptList];
-      updated[existingIndex].quantity += qty;
+      updated[existingIndex].confirmedQuantity += qty;
       setReceiptList(updated);
     } else {
+      // Agregar nuevo producto
       setReceiptList([
         ...receiptList,
         {
-          id: selectedProduct.id,
-          sku: selectedProduct.sku,
-          name: selectedProduct.name,
-          image: selectedProduct.thumbnailImage,
-          category: selectedProduct.category.name,
-          quantity: qty,
+          id: product.id,
+          sku: product.sku,
+          name: product.name,
+          image: product.thumbnailImage,
+          category: product.category.name,
+          location: suggestedLocation,
+          expectedQuantity: expectedQty,
+          confirmedQuantity: qty,
         },
       ]);
     }
+  };
+
+  // Agregar producto desde el buscador
+  const handleAddToReceipt = () => {
+    if (!selectedProduct) return;
+    const qty = parseInt(quantityInput) || 1;
+    addProductToReceipt(selectedProduct, qty);
 
     // Limpiar selección
     setSelectedProduct(null);
@@ -104,11 +154,11 @@ const ProductScanning: React.FC = () => {
     setShowSearch(false);
   };
 
-  const updateQuantity = (index: number, delta: number) => {
+  const updateConfirmedQuantity = (index: number, delta: number) => {
     const updated = [...receiptList];
-    const newQuantity = updated[index].quantity + delta;
+    const newQuantity = updated[index].confirmedQuantity + delta;
     if (newQuantity > 0) {
-      updated[index].quantity = newQuantity;
+      updated[index].confirmedQuantity = newQuantity;
       setReceiptList(updated);
     }
   };
@@ -117,9 +167,28 @@ const ProductScanning: React.FC = () => {
     setReceiptList(receiptList.filter((_, i) => i !== index));
   };
 
+  // Notificar problema
+  const handleNotifyProblem = (sku: string) => {
+    setProblemItemSku(sku);
+    setShowProblemModal(true);
+  };
+
+  const confirmProblemNotification = () => {
+    if (problemItemSku) {
+      setProblemNotified(prev => ({ ...prev, [problemItemSku]: true }));
+    }
+    setShowProblemModal(false);
+    setProblemItemSku(null);
+  };
+
   const totalProducts = receiptList.length;
-  const totalUnits = receiptList.reduce((sum, p) => sum + p.quantity, 0);
+  const totalUnits = receiptList.reduce((sum, p) => sum + p.confirmedQuantity, 0);
   const canContinue = receiptList.length > 0;
+
+  // Verificar si hay discrepancias
+  const hasDiscrepancies = receiptList.some(item =>
+    item.expectedQuantity > 0 && item.confirmedQuantity < item.expectedQuantity
+  );
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -131,7 +200,12 @@ const ProductScanning: React.FC = () => {
         >
           <ArrowLeft className="w-6 h-6 text-gray-700" />
         </button>
-        <h1 className="text-lg font-bold text-gray-900">Lista de Recibo</h1>
+        <div className="text-center">
+          <h1 className="text-lg font-bold text-gray-900">Lista de Recibo</h1>
+          {orderNumber && (
+            <p className="text-xs text-gray-500">{orderNumber}</p>
+          )}
+        </div>
         <div className="w-10" />
       </div>
 
@@ -191,7 +265,8 @@ const ProductScanning: React.FC = () => {
           {showSearch && searchQuery && searchResults.length > 0 && !selectedProduct && (
             <div className="mt-2 border border-gray-200 rounded-xl overflow-hidden max-h-64 overflow-y-auto">
               {searchResults.map((product) => {
-                const alreadyAdded = receiptList.some((item) => item.sku === product.sku);
+                const existingItem = receiptList.find((item) => item.sku === product.sku);
+                const orderExpected = hasOrder ? mockOrderExpectedProducts[product.sku] : null;
                 return (
                   <button
                     key={product.id}
@@ -208,11 +283,15 @@ const ProductScanning: React.FC = () => {
                       <p className="text-xs text-gray-500 font-mono">{product.sku}</p>
                       <p className="text-xs text-gray-400">{product.category.name}</p>
                     </div>
-                    {alreadyAdded && (
+                    {existingItem ? (
                       <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded flex-shrink-0">
-                        En lista
+                        {existingItem.confirmedQuantity} en lista
                       </span>
-                    )}
+                    ) : orderExpected ? (
+                      <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded flex-shrink-0">
+                        Esperado: {orderExpected.expectedQty}
+                      </span>
+                    ) : null}
                   </button>
                 );
               })}
@@ -239,6 +318,11 @@ const ProductScanning: React.FC = () => {
                   <p className="text-sm font-semibold text-gray-900 truncate">{selectedProduct.name}</p>
                   <p className="text-xs text-gray-500 font-mono">{selectedProduct.sku}</p>
                   <p className="text-xs text-gray-400">{selectedProduct.category.name}</p>
+                  {hasOrder && mockOrderExpectedProducts[selectedProduct.sku] && (
+                    <p className="text-xs text-blue-600 font-medium mt-1">
+                      Esperado en orden: {mockOrderExpectedProducts[selectedProduct.sku].expectedQty}
+                    </p>
+                  )}
                 </div>
                 <button
                   onClick={() => setSelectedProduct(null)}
@@ -284,73 +368,133 @@ const ProductScanning: React.FC = () => {
           )}
         </div>
 
-        {/* Receipt List */}
+        {/* Receipt List - Table Format */}
         {receiptList.length > 0 ? (
-          <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-            <div className="px-4 py-3 bg-gray-50 border-b border-gray-200">
-              <span className="text-sm font-semibold text-gray-700">
-                Lista de Recibo ({totalProducts} productos, {totalUnits} unidades)
-              </span>
+          <>
+            {/* Encabezado de tabla */}
+            <div className="bg-gray-100 rounded-t-xl px-3 py-2 grid grid-cols-12 gap-2 text-xs font-semibold text-gray-600">
+              <div className="col-span-2">Ubicación</div>
+              <div className="col-span-2">Código</div>
+              <div className="col-span-3">Producto</div>
+              <div className="col-span-1 text-center">Pedido</div>
+              <div className="col-span-1 text-center">Conf.</div>
+              <div className="col-span-3 text-center">Acciones</div>
             </div>
 
-            {receiptList.map((item, index) => (
-              <div key={item.sku} className="border-b border-gray-100 last:border-none">
-                <div className="p-4">
-                  <div className="flex items-start gap-3 mb-3">
-                    <img
-                      src={item.image}
-                      alt={item.name}
-                      className="w-14 h-14 rounded-lg bg-gray-100 object-cover"
-                    />
-                    <div className="flex-1 min-w-0">
-                      <h3 className="text-sm font-semibold text-gray-900 mb-0.5">
-                        {item.name}
-                      </h3>
-                      <p className="text-xs text-gray-500 font-mono">{item.sku}</p>
-                      <p className="text-xs text-gray-400">{item.category}</p>
+            <div className="bg-white rounded-b-xl shadow-sm overflow-hidden">
+              {receiptList.map((item, index) => {
+                const isComplete = item.expectedQuantity > 0 && item.confirmedQuantity >= item.expectedQuantity;
+                const hasDiscrepancy = item.expectedQuantity > 0 && item.confirmedQuantity < item.expectedQuantity;
+                const isProblemNotified = problemNotified[item.sku];
+
+                return (
+                  <div
+                    key={item.sku}
+                    className={`grid grid-cols-12 gap-2 px-3 py-3 border-b border-gray-100 last:border-none items-center ${
+                      isComplete ? 'bg-green-50' : hasDiscrepancy ? 'bg-yellow-50' : ''
+                    }`}
+                  >
+                    {/* Ubicación */}
+                    <div className="col-span-2">
+                      <span className="text-xs font-bold font-mono text-blue-600 break-all">{item.location}</span>
+                    </div>
+
+                    {/* Código */}
+                    <div className="col-span-2">
+                      <span className="text-xs font-mono text-gray-600 break-all">{item.sku}</span>
+                    </div>
+
+                    {/* Nombre del Producto */}
+                    <div className="col-span-3">
+                      <p className="text-xs font-medium text-gray-900 line-clamp-2">{item.name}</p>
+                    </div>
+
+                    {/* Cantidad Pedida */}
+                    <div className="col-span-1 text-center">
+                      <span className="text-sm font-bold text-gray-500">
+                        {item.expectedQuantity > 0 ? item.expectedQuantity : '-'}
+                      </span>
+                    </div>
+
+                    {/* Cantidad Confirmada */}
+                    <div className="col-span-1 text-center">
+                      <span className={`text-sm font-bold ${isComplete ? 'text-green-600' : 'text-blue-600'}`}>
+                        {item.confirmedQuantity}
+                      </span>
+                    </div>
+
+                    {/* Acciones */}
+                    <div className="col-span-3 flex items-center justify-center gap-1">
+                      {isComplete ? (
+                        <CheckCircle2 className="w-5 h-5 text-green-500" />
+                      ) : (
+                        <>
+                          <button
+                            onClick={() => updateConfirmedQuantity(index, -1)}
+                            className="w-7 h-7 rounded bg-gray-100 flex items-center justify-center active:scale-95 transition-transform"
+                          >
+                            <Minus className="w-3 h-3 text-gray-700" />
+                          </button>
+                          <button
+                            onClick={() => updateConfirmedQuantity(index, 1)}
+                            className="w-7 h-7 rounded bg-blue-500 flex items-center justify-center active:scale-95 transition-transform"
+                          >
+                            <Plus className="w-3 h-3 text-white" />
+                          </button>
+                        </>
+                      )}
+
+                      {/* Botón de notificar problema (solo si hay discrepancia) */}
+                      {hasDiscrepancy && !isProblemNotified && (
+                        <button
+                          onClick={() => handleNotifyProblem(item.sku)}
+                          className="w-7 h-7 rounded bg-yellow-100 flex items-center justify-center active:scale-95 transition-transform"
+                          title="Notificar problema"
+                        >
+                          <AlertTriangle className="w-3 h-3 text-yellow-600" />
+                        </button>
+                      )}
+
+                      {/* Indicador de problema notificado */}
+                      {isProblemNotified && (
+                        <div className="w-7 h-7 rounded bg-orange-100 flex items-center justify-center" title="Problema notificado">
+                          <Bell className="w-3 h-3 text-orange-500" />
+                        </div>
+                      )}
+
+                      <button
+                        onClick={() => removeProduct(index)}
+                        className="w-7 h-7 flex items-center justify-center text-red-500 active:scale-95 transition-transform"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </button>
                     </div>
                   </div>
+                );
+              })}
+            </div>
 
-                  {/* Quantity Controls */}
-                  <div className="flex items-center gap-3">
-                    <span className="text-xs text-gray-500 font-medium">Cantidad:</span>
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => updateQuantity(index, -1)}
-                        className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center active:scale-95 transition-transform"
-                      >
-                        <Minus className="w-4 h-4 text-gray-700" />
-                      </button>
-                      <span className="w-12 text-center font-bold text-gray-900">
-                        {item.quantity}
-                      </span>
-                      <button
-                        onClick={() => updateQuantity(index, 1)}
-                        className="w-8 h-8 rounded-lg bg-blue-500 flex items-center justify-center active:scale-95 transition-transform"
-                      >
-                        <Plus className="w-4 h-4 text-white" />
-                      </button>
-                    </div>
-
-                    <div className="flex-1" />
-
-                    <button
-                      onClick={() => removeProduct(index)}
-                      className="w-8 h-8 flex items-center justify-center text-red-500 active:scale-95 transition-transform"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+            {/* Alerta global de discrepancias */}
+            {hasDiscrepancies && (
+              <div className="mt-4 bg-yellow-50 border border-yellow-200 rounded-xl p-3">
+                <div className="flex items-start gap-2">
+                  <AlertTriangle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold text-yellow-800">Hay productos con cantidad menor a la esperada</p>
+                    <p className="text-xs text-yellow-700 mt-1">
+                      Usa el botón <AlertTriangle className="w-3 h-3 inline text-yellow-600" /> en cada producto para notificar el problema antes de continuar.
+                    </p>
                   </div>
                 </div>
               </div>
-            ))}
-          </div>
+            )}
+          </>
         ) : (
           // Empty State
           <div className="flex flex-col items-center justify-center py-16 text-center">
             <Package className="w-16 h-16 text-gray-300 mb-4" />
             <p className="text-gray-500 font-medium mb-1">Lista de recibo vacía</p>
-            <p className="text-sm text-gray-400">Busca y agrega los productos del contenedor</p>
+            <p className="text-sm text-gray-400">Escanea o busca los productos para agregarlos</p>
           </div>
         )}
       </div>
@@ -365,7 +509,14 @@ const ProductScanning: React.FC = () => {
         <Button
           onClick={() => navigate('/reception/location-assignment', {
             state: {
-              receiptList,
+              receiptList: receiptList.map(item => ({
+                id: item.id,
+                sku: item.sku,
+                name: item.name,
+                image: item.image,
+                category: item.category,
+                quantity: item.confirmedQuantity,
+              })),
               orderNumber,
               supplier,
             },
@@ -387,6 +538,68 @@ const ProductScanning: React.FC = () => {
           expectedType="product"
           simulateValue={mockProducts[0]?.sku || 'REP-12345'}
         />
+      )}
+
+      {/* Modal de Notificar Problema */}
+      {showProblemModal && problemItemSku && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl w-full max-w-sm p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center">
+                <AlertTriangle className="w-6 h-6 text-yellow-600" />
+              </div>
+              <div>
+                <h2 className="text-lg font-bold text-gray-900">Notificar Problema</h2>
+                <p className="text-sm text-gray-500">{problemItemSku}</p>
+              </div>
+            </div>
+
+            {(() => {
+              const item = receiptList.find(i => i.sku === problemItemSku);
+              if (!item) return null;
+              return (
+                <div className="bg-yellow-50 rounded-lg p-3 mb-4">
+                  <p className="text-sm text-gray-700">
+                    <strong>{item.name}</strong>
+                  </p>
+                  <p className="text-sm text-yellow-800 mt-2">
+                    Cantidad esperada: <strong>{item.expectedQuantity}</strong>
+                  </p>
+                  <p className="text-sm text-yellow-800">
+                    Cantidad recibida: <strong>{item.confirmedQuantity}</strong>
+                  </p>
+                  <p className="text-sm text-red-600 font-semibold mt-1">
+                    Faltante: {item.expectedQuantity - item.confirmedQuantity} unidades
+                  </p>
+                </div>
+              );
+            })()}
+
+            <p className="text-sm text-gray-600 mb-4">
+              Se notificará al supervisor sobre esta discrepancia en la recepción.
+            </p>
+
+            <div className="flex gap-3">
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  setShowProblemModal(false);
+                  setProblemItemSku(null);
+                }}
+                className="flex-1"
+              >
+                Cancelar
+              </Button>
+              <Button
+                onClick={confirmProblemNotification}
+                className="flex-1 !bg-yellow-500 hover:!bg-yellow-600"
+              >
+                <Bell className="w-4 h-4 mr-2" />
+                NOTIFICAR
+              </Button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

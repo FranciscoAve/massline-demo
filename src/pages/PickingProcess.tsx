@@ -69,15 +69,6 @@ const parseLocation = (loc: string) => {
   };
 };
 
-// Formatear ubicación para mostrar
-const formatLocation = (loc: string) => {
-  const parts = loc.split('-');
-  const zona = parts[0]?.replace('Z', '') || '';
-  const pasillo = parts[1]?.replace('P', '').toUpperCase() || '';
-  const estante = parts[2]?.replace('E', '') || '';
-  const nivel = parts[3]?.replace('N', '') || '';
-  return `Zona ${zona} - Pasillo ${pasillo} - Estante ${estante} - Nivel ${nivel}`;
-};
 
 const PickingProcess: React.FC = () => {
   const { orderId } = useParams();
@@ -234,11 +225,17 @@ const PickingProcess: React.FC = () => {
 
       {/* Lista de productos ordenada por ubicación */}
       <div className="flex-1 p-4 pb-28 overflow-y-auto">
-        <p className="text-sm text-gray-600 mb-3 font-medium">
-          Productos a despachar (ordenados por ubicación):
-        </p>
+        {/* Encabezado de tabla */}
+        <div className="bg-gray-100 rounded-t-xl px-3 py-2 grid grid-cols-12 gap-2 text-xs font-semibold text-gray-600 sticky top-0">
+          <div className="col-span-2">Ubicación</div>
+          <div className="col-span-2">Código</div>
+          <div className="col-span-4">Producto</div>
+          <div className="col-span-1 text-center">Pedido</div>
+          <div className="col-span-1 text-center">Conf.</div>
+          <div className="col-span-2 text-center">Acción</div>
+        </div>
 
-        <div className="space-y-3">
+        <div className="bg-white rounded-b-xl shadow-sm overflow-hidden">
           {sortedItems.map((item, index) => {
             const availableStock = getAvailableStock(item);
             const isPicked = item.status === 'picked';
@@ -247,75 +244,61 @@ const PickingProcess: React.FC = () => {
             return (
               <div
                 key={`${item.productSku}-${item.locationCode}`}
-                className={`bg-white rounded-xl shadow-sm overflow-hidden border-2 ${
-                  isPicked ? 'border-green-400 bg-green-50' : hasStockIssue ? 'border-yellow-300' : 'border-transparent'
+                className={`grid grid-cols-12 gap-2 px-3 py-3 border-b border-gray-100 last:border-none items-center ${
+                  isPicked ? 'bg-green-50' : hasStockIssue ? 'bg-yellow-50' : ''
                 }`}
               >
-                {/* Ubicación header */}
-                <div className={`px-4 py-2 flex items-center gap-2 ${isPicked ? 'bg-green-100' : 'bg-gray-50'}`}>
-                  <MapPin className={`w-4 h-4 ${isPicked ? 'text-green-600' : 'text-blue-500'}`} />
-                  <span className="text-sm font-bold font-mono text-blue-600">{item.locationCode}</span>
-                  <span className="text-xs text-gray-500">• {formatLocation(item.locationCode)}</span>
+                {/* Ubicación */}
+                <div className="col-span-2">
+                  <div className="flex items-center gap-1">
+                    <MapPin className={`w-3 h-3 flex-shrink-0 ${isPicked ? 'text-green-600' : 'text-blue-500'}`} />
+                    <span className="text-xs font-bold font-mono text-blue-600 break-all">{item.locationCode}</span>
+                  </div>
                 </div>
 
-                <div className="p-4">
-                  <div className="flex gap-3">
-                    {/* Imagen */}
-                    <img
-                      src={item.productImage}
-                      alt={item.productName}
-                      className="w-16 h-16 rounded-lg bg-gray-100 object-cover flex-shrink-0"
-                    />
+                {/* Código */}
+                <div className="col-span-2">
+                  <span className="text-xs font-mono text-gray-600 break-all">{item.productSku}</span>
+                </div>
 
-                    {/* Info del producto */}
-                    <div className="flex-1 min-w-0">
-                      <h3 className="text-sm font-bold text-gray-900 truncate">{item.productName}</h3>
-                      <p className="text-xs text-gray-500 font-mono mb-1">{item.productSku}</p>
-
-                      {/* Cantidades */}
-                      <div className="flex items-center gap-3 text-xs">
-                        <span className="text-gray-600">
-                          Pedido: <strong className="text-blue-600">{item.requestedQuantity}</strong>
-                        </span>
-                        <span className={`${availableStock < item.requestedQuantity ? 'text-red-600' : 'text-green-600'}`}>
-                          Disponible: <strong>{availableStock}</strong>
-                        </span>
-                      </div>
-
-                      {/* Alerta de stock */}
-                      {hasStockIssue && !isPicked && (
-                        <div className="mt-2 flex items-center gap-1 text-xs text-yellow-700">
-                          <AlertTriangle className="w-3 h-3" />
-                          <span>Stock insuficiente</span>
-                        </div>
-                      )}
-
-                      {/* Estado de recolección */}
-                      {isPicked && (
-                        <div className="mt-2 flex items-center gap-1 text-xs text-green-600">
-                          <CheckCircle2 className="w-4 h-4" />
-                          <span className="font-semibold">Recolectado: {item.pickedQuantity} unidades</span>
-                        </div>
-                      )}
+                {/* Nombre del Producto */}
+                <div className="col-span-4">
+                  <p className="text-xs font-medium text-gray-900 line-clamp-2">{item.productName}</p>
+                  {hasStockIssue && !isPicked && (
+                    <div className="flex items-center gap-1 text-xs text-yellow-700 mt-0.5">
+                      <AlertTriangle className="w-3 h-3" />
+                      <span>Stock bajo ({availableStock})</span>
                     </div>
+                  )}
+                </div>
 
-                    {/* Botón de escaneo */}
-                    {!isPicked && (
-                      <button
-                        onClick={() => handleStartScan(index)}
-                        className="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center active:scale-95 transition-transform flex-shrink-0 self-center"
-                        title="Escanear estantería"
-                      >
-                        <ScanBarcode className="w-6 h-6 text-white" />
-                      </button>
-                    )}
+                {/* Cantidad Pedida */}
+                <div className="col-span-1 text-center">
+                  <span className="text-sm font-bold text-blue-600">{item.requestedQuantity}</span>
+                </div>
 
-                    {isPicked && (
-                      <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center flex-shrink-0 self-center">
-                        <CheckCircle2 className="w-6 h-6 text-green-500" />
-                      </div>
-                    )}
-                  </div>
+                {/* Cantidad Confirmada */}
+                <div className="col-span-1 text-center">
+                  <span className={`text-sm font-bold ${isPicked ? 'text-green-600' : 'text-gray-400'}`}>
+                    {item.pickedQuantity}
+                  </span>
+                </div>
+
+                {/* Acción */}
+                <div className="col-span-2 flex justify-center">
+                  {!isPicked ? (
+                    <button
+                      onClick={() => handleStartScan(index)}
+                      className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center active:scale-95 transition-transform"
+                      title="Escanear estantería"
+                    >
+                      <ScanBarcode className="w-5 h-5 text-white" />
+                    </button>
+                  ) : (
+                    <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                      <CheckCircle2 className="w-5 h-5 text-green-500" />
+                    </div>
+                  )}
                 </div>
               </div>
             );
