@@ -1,18 +1,25 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { CheckCircle2, Package, Clock, MapPin, Truck, User, Copy, Share2, Trophy } from 'lucide-react';
+import { CheckCircle2, Package, Clock, MapPin, Truck, User, Copy, Share2, Trophy, Printer } from 'lucide-react';
 import Button from '../components/ui/Button';
 import { mockOrders } from '../data/mockData';
+import { generateLabelFromOrder } from '../utils/dispatchLabelPdf';
 
 const DispatchConfirmation: React.FC = () => {
   const { orderId } = useParams();
   const navigate = useNavigate();
+  const [labelGenerated, setLabelGenerated] = useState(false);
 
   const order = mockOrders.find(o => o.id === orderId);
   if (!order) return <div>Order not found</div>;
 
   const totalItems = order.items.length;
   const totalUnits = order.items.reduce((sum, item) => sum + item.requestedQuantity, 0);
+
+  const handleGenerateLabel = () => {
+    generateLabelFromOrder(order, 1, 1);
+    setLabelGenerated(true);
+  };
 
   const trackingCode = order.orderNumber;
 
@@ -77,7 +84,7 @@ const DispatchConfirmation: React.FC = () => {
             </div>
           </div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 mb-3">
           <button className="flex-1 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 flex items-center justify-center gap-2 active:scale-95 transition-transform">
             <Copy className="w-4 h-4" />
             Copiar
@@ -87,6 +94,19 @@ const DispatchConfirmation: React.FC = () => {
             Compartir
           </button>
         </div>
+
+        {/* Botón para generar etiqueta PDF */}
+        <button
+          onClick={handleGenerateLabel}
+          className={`w-full py-3 rounded-lg text-sm font-bold flex items-center justify-center gap-2 active:scale-95 transition-transform ${
+            labelGenerated
+              ? 'bg-green-100 text-green-700 border border-green-300'
+              : 'bg-blue-500 text-white'
+          }`}
+        >
+          <Printer className="w-5 h-5" />
+          {labelGenerated ? '✓ ETIQUETA GENERADA' : 'GENERAR ETIQUETA PDF'}
+        </button>
       </div>
 
       {/* Performance Metrics */}

@@ -52,6 +52,7 @@ export interface PickingOrder {
   type: 'dispatch' | 'transfer' | 'internal_request';
   priority: 'urgent' | 'high' | 'normal' | 'low';
   status: 'pending' | 'assigned' | 'in_progress' | 'packed' | 'dispatched';
+  releaseStatus: 'released' | 'unreleased' | 'internal';
   destination: {
     name: string;
     address?: string;
@@ -286,6 +287,7 @@ export const mockOrders: PickingOrder[] = [
     type: 'dispatch',
     priority: 'urgent',
     status: 'pending',
+    releaseStatus: 'unreleased',
     destination: {
       name: 'Tienda Centro - Local 5',
       address: 'Av. Principal #123, Guayaquil',
@@ -355,7 +357,8 @@ export const mockOrders: PickingOrder[] = [
     orderNumber: 'DP-2025-0146',
     type: 'dispatch',
     priority: 'normal',
-    status: 'pending',
+    status: 'dispatched',
+    releaseStatus: 'released',
     destination: {
       name: 'Mantenimiento - Taller Norte',
       address: 'Km 12.5 Vía a Daule',
@@ -367,10 +370,10 @@ export const mockOrders: PickingOrder[] = [
         productName: 'Cañería del Enfriador de Aceite Set 2pcs',
         productImage: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100',
         requestedQuantity: 5,
-        pickedQuantity: 0,
+        pickedQuantity: 5,
         locationCode: '17-E-01',
         distance: 12,
-        status: 'pending',
+        status: 'picked',
       },
       {
         productId: '10',
@@ -378,10 +381,10 @@ export const mockOrders: PickingOrder[] = [
         productName: 'Aceite Motor 10W-40 Sintético',
         productImage: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100',
         requestedQuantity: 12,
-        pickedQuantity: 0,
+        pickedQuantity: 12,
         locationCode: '14-C-02',
         distance: 25,
-        status: 'pending',
+        status: 'picked',
       },
       {
         productId: '7',
@@ -389,23 +392,24 @@ export const mockOrders: PickingOrder[] = [
         productName: 'Asiento Delantero & Posterior Set Chief II',
         productImage: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100',
         requestedQuantity: 2,
-        pickedQuantity: 0,
+        pickedQuantity: 2,
         locationCode: '23-A-01',
         distance: 20,
-        status: 'pending',
+        status: 'picked',
       },
     ],
-    createdAt: new Date(Date.now() - 60 * 60 * 1000).toISOString(),
-    dueAt: new Date(Date.now() + 4 * 60 * 60 * 1000).toISOString(),
+    createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), // Hace 2 días
+    dueAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
   },
   {
     id: '3',
-    orderNumber: 'DP-2025-0147',
+    orderNumber: 'INT-2025-0023',
     type: 'internal_request',
     priority: 'high',
     status: 'pending',
+    releaseStatus: 'internal',
     destination: {
-      name: 'Departamento de Ventas',
+      name: 'Taller de Ensamblaje - Línea 1',
     },
     items: [
       {
@@ -439,7 +443,8 @@ export const mockOrders: PickingOrder[] = [
     orderNumber: 'DP-2025-0148',
     type: 'dispatch',
     priority: 'low',
-    status: 'pending',
+    status: 'dispatched',
+    releaseStatus: 'released',
     destination: {
       name: 'Tienda Sur - Local 8',
       address: 'Av. del Sur #456',
@@ -451,14 +456,14 @@ export const mockOrders: PickingOrder[] = [
         productName: 'Direccional Delantera LH',
         productImage: 'https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?w=100',
         requestedQuantity: 15,
-        pickedQuantity: 0,
+        pickedQuantity: 15,
         locationCode: '05-B-00',
         distance: 15,
-        status: 'pending',
+        status: 'picked',
       },
     ],
-    createdAt: new Date(Date.now() - 120 * 60 * 1000).toISOString(),
-    dueAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+    createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), // Hace 3 días
+    dueAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
   },
   {
     id: '5',
@@ -466,6 +471,7 @@ export const mockOrders: PickingOrder[] = [
     type: 'dispatch',
     priority: 'urgent',
     status: 'pending',
+    releaseStatus: 'unreleased',
     destination: {
       name: 'Cliente VIP - Empresa ABC',
       address: 'Cdla. Kennedy, Guayaquil',
@@ -496,5 +502,108 @@ export const mockOrders: PickingOrder[] = [
     ],
     createdAt: new Date(Date.now() - 15 * 60 * 1000).toISOString(),
     dueAt: new Date(Date.now() + 1 * 60 * 60 * 1000).toISOString(),
+  },
+  // Órdenes internas adicionales para taller de ensamblaje
+  {
+    id: '6',
+    orderNumber: 'INT-2025-0024',
+    type: 'internal_request',
+    priority: 'normal',
+    status: 'pending',
+    releaseStatus: 'internal',
+    destination: {
+      name: 'Taller de Ensamblaje - Línea 2',
+    },
+    items: [
+      {
+        productId: '1',
+        productSku: 'RE-R250-H10313',
+        productName: 'Direccional Delantera LH',
+        productImage: 'https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?w=100',
+        requestedQuantity: 20,
+        pickedQuantity: 0,
+        locationCode: '05-B-00',
+        distance: 15,
+        status: 'pending',
+      },
+      {
+        productId: '2',
+        productSku: 'RE-R250-I10312',
+        productName: 'Direccional Delantera RH',
+        productImage: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100',
+        requestedQuantity: 20,
+        pickedQuantity: 0,
+        locationCode: '05-B-08',
+        distance: 22,
+        status: 'pending',
+      },
+    ],
+    createdAt: new Date(Date.now() - 45 * 60 * 1000).toISOString(),
+    dueAt: new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    id: '7',
+    orderNumber: 'INT-2025-0025',
+    type: 'internal_request',
+    priority: 'urgent',
+    status: 'pending',
+    releaseStatus: 'internal',
+    destination: {
+      name: 'Taller de Ensamblaje - Línea 3',
+    },
+    items: [
+      {
+        productId: '9',
+        productSku: 'RE-RNJ-330501',
+        productName: 'Batería 12V 7Ah',
+        productImage: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100',
+        requestedQuantity: 15,
+        pickedQuantity: 0,
+        locationCode: '23-A-01',
+        distance: 18,
+        status: 'pending',
+      },
+    ],
+    createdAt: new Date(Date.now() - 10 * 60 * 1000).toISOString(),
+    dueAt: new Date(Date.now() + 3 * 60 * 60 * 1000).toISOString(),
+  },
+  // Orden liberada adicional (completada)
+  {
+    id: '8',
+    orderNumber: 'DP-2025-0150',
+    type: 'dispatch',
+    priority: 'high',
+    status: 'dispatched',
+    releaseStatus: 'released',
+    destination: {
+      name: 'Distribuidora Central',
+      address: 'Av. de las Américas #789, Guayaquil',
+    },
+    items: [
+      {
+        productId: '5',
+        productSku: 'RE-RNJ-250302',
+        productName: 'Cañería del Enfriador de Aceite Set 2pcs',
+        productImage: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100',
+        requestedQuantity: 10,
+        pickedQuantity: 10,
+        locationCode: '17-E-01',
+        distance: 12,
+        status: 'picked',
+      },
+      {
+        productId: '8',
+        productSku: 'RE-R250-K20415',
+        productName: 'Disco de Freno Ventilado',
+        productImage: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100',
+        requestedQuantity: 8,
+        pickedQuantity: 8,
+        locationCode: '12-B-03',
+        distance: 22,
+        status: 'picked',
+      },
+    ],
+    createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(), // Hace 5 días
+    dueAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
   },
 ];
