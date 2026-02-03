@@ -16,9 +16,26 @@ const Packing: React.FC = () => {
   const location = useLocation();
   const locationState = location.state as LocationState | null;
 
-  // Obtener datos de picking (items con cantidades recolectadas y reemplazos)
-  const pickedItems = locationState?.pickedItems;
-  const replacementsUsed = locationState?.replacementsUsed || {};
+  // Obtener datos de picking - primero de location.state, luego de sessionStorage
+  const getPickingData = (): LocationState => {
+    if (locationState?.pickedItems || locationState?.replacementsUsed) {
+      return locationState;
+    }
+    // Intentar recuperar de sessionStorage
+    const stored = sessionStorage.getItem(`picking_${orderId}`);
+    if (stored) {
+      try {
+        return JSON.parse(stored);
+      } catch {
+        return {};
+      }
+    }
+    return {};
+  };
+
+  const pickingData = getPickingData();
+  const pickedItems = pickingData.pickedItems;
+  const replacementsUsed = pickingData.replacementsUsed || {};
   const [checklist, setChecklist] = useState({
     packed: false,
     verified: false,

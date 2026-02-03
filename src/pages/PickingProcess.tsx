@@ -490,12 +490,19 @@ const PickingProcess: React.FC = () => {
           )}
         </div>
         <Button
-          onClick={() => navigate(`/dispatch/packing/${orderId}`, {
-            state: {
+          onClick={() => {
+            // Guardar en sessionStorage para persistencia
+            sessionStorage.setItem(`picking_${orderId}`, JSON.stringify({
               pickedItems: items,
               replacementsUsed: replacementsUsed,
-            }
-          })}
+            }));
+            navigate(`/dispatch/packing/${orderId}`, {
+              state: {
+                pickedItems: items,
+                replacementsUsed: replacementsUsed,
+              }
+            });
+          }}
           disabled={!allCompleted}
           fullWidth
         >
@@ -518,7 +525,7 @@ const PickingProcess: React.FC = () => {
       {/* Quantity Confirmation Modal */}
       {showQuantityModal && selectedItem && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl w-full max-w-sm p-6">
+          <div className="bg-white rounded-xl w-full max-w-sm p-4 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
               <div>
                 <h2 className="text-lg font-bold text-gray-900">Confirmar Cantidad</h2>
@@ -649,132 +656,108 @@ const PickingProcess: React.FC = () => {
               </div>
             )}
 
-            {/* Modal de Reemplazo inline con selección flexible de cantidades */}
+            {/* Modal de Reemplazo inline - versión compacta */}
             {showReplacementModal && replacementInfo && (
-              <div className="bg-blue-50 border border-blue-300 rounded-lg px-3 py-3 mb-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <RefreshCw className="w-4 h-4 text-blue-600" />
-                  <p className="text-sm font-semibold text-blue-800">Combinar con reemplazo</p>
+              <div className="bg-blue-50 border border-blue-300 rounded-lg px-2 py-2 mb-3">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-1">
+                    <RefreshCw className="w-3 h-3 text-blue-600" />
+                    <p className="text-xs font-semibold text-blue-800">Combinar con reemplazo</p>
+                  </div>
+                  <button
+                    onClick={() => setShowReplacementModal(false)}
+                    className="text-gray-400 hover:text-gray-600"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
                 </div>
 
                 {replacementInfo.replacement ? (
                   <>
-                    {/* Info del reemplazo */}
-                    <div className="bg-white rounded-lg p-2 mb-3">
-                      <p className="text-xs text-gray-500">Producto similar:</p>
-                      <p className="text-sm font-semibold text-gray-900">{replacementInfo.replacement.name}</p>
-                      <p className="text-xs text-gray-500 font-mono">{replacementInfo.replacement.sku}</p>
-                      <p className="text-xs text-blue-600 mt-1">
-                        Ubicación: {replacementInfo.replacement.location} • Stock: {replacementInfo.replacementStock}
-                      </p>
+                    {/* Info del reemplazo - compacta */}
+                    <div className="bg-white rounded p-1.5 mb-2 text-xs">
+                      <p className="font-medium text-gray-900 truncate">{replacementInfo.replacement.name}</p>
+                      <p className="text-gray-500 font-mono text-[10px]">{replacementInfo.replacement.sku} • {replacementInfo.replacement.location}</p>
                     </div>
 
-                    {/* Selector de cantidad ORIGINAL */}
-                    <div className="bg-white rounded-lg p-2 mb-2">
-                      <div className="flex items-center justify-between mb-1">
-                        <div>
-                          <p className="text-xs font-semibold text-gray-700">Original</p>
-                          <p className="text-xs text-gray-500">(Stock: {replacementInfo.originalStock})</p>
-                        </div>
-                        <div className="flex items-center gap-2">
+                    {/* Selectores en una fila */}
+                    <div className="grid grid-cols-2 gap-2 mb-2">
+                      {/* Original */}
+                      <div className="bg-white rounded p-1.5">
+                        <p className="text-[10px] text-gray-500 mb-1">Original ({replacementInfo.originalStock})</p>
+                        <div className="flex items-center justify-center gap-1">
                           <button
                             onClick={() => setOriginalQtyToUse(Math.max(0, originalQtyToUse - 1))}
-                            className="w-7 h-7 bg-gray-100 rounded-full flex items-center justify-center active:scale-95"
+                            className="w-6 h-6 bg-gray-100 rounded-full flex items-center justify-center active:scale-95"
                           >
-                            <Minus className="w-3 h-3 text-gray-600" />
+                            <Minus className="w-2.5 h-2.5 text-gray-600" />
                           </button>
-                          <span className="w-8 text-center text-lg font-bold text-gray-900">{originalQtyToUse}</span>
+                          <span className="w-6 text-center text-sm font-bold text-gray-900">{originalQtyToUse}</span>
                           <button
                             onClick={() => setOriginalQtyToUse(Math.min(replacementInfo.originalStock, originalQtyToUse + 1))}
-                            className="w-7 h-7 bg-blue-500 rounded-full flex items-center justify-center active:scale-95"
+                            className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center active:scale-95"
                           >
-                            <Plus className="w-3 h-3 text-white" />
+                            <Plus className="w-2.5 h-2.5 text-white" />
                           </button>
                         </div>
                       </div>
-                    </div>
-
-                    {/* Selector de cantidad REEMPLAZO */}
-                    <div className="bg-white rounded-lg p-2 mb-3">
-                      <div className="flex items-center justify-between mb-1">
-                        <div>
-                          <p className="text-xs font-semibold text-blue-700">Reemplazo</p>
-                          <p className="text-xs text-gray-500">(Stock: {replacementInfo.replacementStock})</p>
-                        </div>
-                        <div className="flex items-center gap-2">
+                      {/* Reemplazo */}
+                      <div className="bg-white rounded p-1.5">
+                        <p className="text-[10px] text-blue-600 mb-1">Reemplazo ({replacementInfo.replacementStock})</p>
+                        <div className="flex items-center justify-center gap-1">
                           <button
                             onClick={() => setReplacementQtyToUse(Math.max(0, replacementQtyToUse - 1))}
-                            className="w-7 h-7 bg-gray-100 rounded-full flex items-center justify-center active:scale-95"
+                            className="w-6 h-6 bg-gray-100 rounded-full flex items-center justify-center active:scale-95"
                           >
-                            <Minus className="w-3 h-3 text-gray-600" />
+                            <Minus className="w-2.5 h-2.5 text-gray-600" />
                           </button>
-                          <span className="w-8 text-center text-lg font-bold text-blue-600">{replacementQtyToUse}</span>
+                          <span className="w-6 text-center text-sm font-bold text-blue-600">{replacementQtyToUse}</span>
                           <button
                             onClick={() => setReplacementQtyToUse(Math.min(replacementInfo.replacementStock, replacementQtyToUse + 1))}
-                            className="w-7 h-7 bg-blue-500 rounded-full flex items-center justify-center active:scale-95"
+                            className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center active:scale-95"
                           >
-                            <Plus className="w-3 h-3 text-white" />
+                            <Plus className="w-2.5 h-2.5 text-white" />
                           </button>
                         </div>
                       </div>
                     </div>
 
-                    {/* Total y validación */}
-                    <div className={`rounded-lg p-2 mb-3 ${
-                      originalQtyToUse + replacementQtyToUse >= replacementInfo.requestedQty
-                        ? 'bg-green-100 border border-green-300'
-                        : 'bg-red-100 border border-red-300'
-                    }`}>
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-medium text-gray-700">Total a despachar:</span>
-                        <span className={`text-lg font-bold ${
+                    {/* Total y botón en una fila */}
+                    <div className="flex items-center gap-2">
+                      <div className={`flex-1 rounded px-2 py-1 text-center ${
+                        originalQtyToUse + replacementQtyToUse >= replacementInfo.requestedQty
+                          ? 'bg-green-100' : 'bg-red-100'
+                      }`}>
+                        <span className={`text-sm font-bold ${
                           originalQtyToUse + replacementQtyToUse >= replacementInfo.requestedQty
-                            ? 'text-green-700'
-                            : 'text-red-700'
+                            ? 'text-green-700' : 'text-red-700'
                         }`}>
-                          {originalQtyToUse + replacementQtyToUse} / {replacementInfo.requestedQty}
+                          {originalQtyToUse + replacementQtyToUse}/{replacementInfo.requestedQty}
                         </span>
                       </div>
-                      {originalQtyToUse + replacementQtyToUse < replacementInfo.requestedQty && (
-                        <p className="text-xs text-red-600 mt-1">
-                          ⚠️ Faltan {replacementInfo.requestedQty - (originalQtyToUse + replacementQtyToUse)} unidades
-                        </p>
-                      )}
-                    </div>
-
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => setShowReplacementModal(false)}
-                        className="flex-1 text-xs font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 px-2 py-1.5 rounded-lg transition-colors"
-                      >
-                        Cancelar
-                      </button>
                       <button
                         onClick={() => handleConfirmReplacement(replacementQtyToUse)}
                         disabled={originalQtyToUse + replacementQtyToUse < replacementInfo.requestedQty}
-                        className={`flex-1 text-xs font-medium px-2 py-1.5 rounded-lg transition-colors ${
+                        className={`flex-1 text-xs font-medium px-2 py-1.5 rounded transition-colors ${
                           originalQtyToUse + replacementQtyToUse >= replacementInfo.requestedQty
                             ? 'text-white bg-blue-500 hover:bg-blue-600'
                             : 'text-gray-400 bg-gray-200 cursor-not-allowed'
                         }`}
                       >
-                        Confirmar combinación
+                        Confirmar
                       </button>
                     </div>
                   </>
                 ) : (
-                  <>
-                    <div className="bg-white rounded-lg p-2 mb-2">
-                      <p className="text-xs text-red-600 font-medium">No hay productos similares disponibles</p>
-                      <p className="text-xs text-gray-500">Se despachará con la cantidad disponible.</p>
-                    </div>
+                  <div className="bg-white rounded p-2 text-center">
+                    <p className="text-xs text-red-600 font-medium">No hay productos similares</p>
                     <button
                       onClick={() => setShowReplacementModal(false)}
-                      className="w-full text-xs font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 px-2 py-1.5 rounded-lg transition-colors"
+                      className="mt-1 text-xs text-gray-500 underline"
                     >
-                      Entendido
+                      Cerrar
                     </button>
-                  </>
+                  </div>
                 )}
               </div>
             )}
