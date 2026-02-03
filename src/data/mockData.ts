@@ -63,16 +63,17 @@ export interface PickingOrder {
 }
 
 // Mock Products
+// Formato de código: RE-R[serie]-[código] (basado en catálogo real)
 export const mockProducts: Product[] = [
   {
     id: '1',
-    sku: 'REP-12345',
-    name: 'Filtro de Aceite XYZ Premium',
-    description: 'Filtro de aceite de alta eficiencia para motocicletas Yamaha FZ150',
+    sku: 'RE-R250-H10313',
+    name: 'Direccional Delantera LH',
+    description: 'Direccional delantera izquierda para motocicletas',
     category: {
       id: 'cat-1',
-      name: 'Filtros',
-      path: ['Repuestos', 'Motor', 'Filtros'],
+      name: 'Iluminación',
+      path: ['Repuestos', 'Eléctrico', 'Iluminación'],
     },
     thumbnailImage: 'https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?w=100',
     totalStock: 45,
@@ -83,13 +84,13 @@ export const mockProducts: Product[] = [
   },
   {
     id: '2',
-    sku: 'REP-98765',
-    name: 'Pastilla de Freno Delantera',
-    description: 'Pastillas de freno cerámicas para Honda CB125',
+    sku: 'RE-R250-I10312',
+    name: 'Direccional Delantera RH',
+    description: 'Direccional delantera derecha para motocicletas',
     category: {
-      id: 'cat-2',
-      name: 'Frenos',
-      path: ['Repuestos', 'Sistema de Frenos', 'Pastillas'],
+      id: 'cat-1',
+      name: 'Iluminación',
+      path: ['Repuestos', 'Eléctrico', 'Iluminación'],
     },
     thumbnailImage: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100',
     totalStock: 12,
@@ -100,13 +101,13 @@ export const mockProducts: Product[] = [
   },
   {
     id: '3',
-    sku: 'REP-55555',
-    name: 'Bujía NGK Iridium',
-    description: 'Bujía de iridio de larga duración',
+    sku: 'RE-R250-I10504',
+    name: 'Comando Derecho Chief 4V Ninja 2.5/3.0',
+    description: 'Comando derecho para sistema de control',
     category: {
       id: 'cat-3',
-      name: 'Encendido',
-      path: ['Repuestos', 'Sistema Eléctrico', 'Encendido'],
+      name: 'Controles',
+      path: ['Repuestos', 'Manubrio', 'Controles'],
     },
     thumbnailImage: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100',
     totalStock: 3,
@@ -117,13 +118,13 @@ export const mockProducts: Product[] = [
   },
   {
     id: '4',
-    sku: 'REP-11111',
-    name: 'Amortiguador Delantero',
-    description: 'Amortiguador hidráulico ajustable',
+    sku: 'RE-R250-I0709',
+    name: 'Estribo de Conductor C/Pedales Izq./Der.',
+    description: 'Estribos con pedales para conductor',
     category: {
       id: 'cat-4',
-      name: 'Suspensión',
-      path: ['Repuestos', 'Suspensión', 'Amortiguadores'],
+      name: 'Estribos',
+      path: ['Repuestos', 'Chasis', 'Estribos'],
     },
     thumbnailImage: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100',
     totalStock: 28,
@@ -134,13 +135,13 @@ export const mockProducts: Product[] = [
   },
   {
     id: '5',
-    sku: 'REP-22222',
-    name: 'Cadena de Transmisión 520',
-    description: 'Cadena reforzada con retenes de goma',
+    sku: 'RE-RNJ-250302',
+    name: 'Cañería del Enfriador de Aceite Set 2pcs',
+    description: 'Set de cañerías para sistema de enfriamiento',
     category: {
       id: 'cat-5',
-      name: 'Transmisión',
-      path: ['Repuestos', 'Transmisión', 'Cadenas'],
+      name: 'Motor',
+      path: ['Repuestos', 'Motor', 'Enfriamiento'],
     },
     thumbnailImage: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100',
     totalStock: 67,
@@ -151,13 +152,13 @@ export const mockProducts: Product[] = [
   },
   {
     id: '6',
-    sku: 'REP-33333',
-    name: 'Llanta Delantera 17"',
-    description: 'Llanta tubeless para motocicletas deportivas',
+    sku: 'RE-RNJ-110237',
+    name: 'Piñón de Velocímetro Chief II',
+    description: 'Piñón para sistema de velocímetro',
     category: {
       id: 'cat-6',
-      name: 'Llantas',
-      path: ['Repuestos', 'Ruedas', 'Llantas'],
+      name: 'Transmisión',
+      path: ['Repuestos', 'Transmisión', 'Piñones'],
     },
     thumbnailImage: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100',
     totalStock: 15,
@@ -168,13 +169,13 @@ export const mockProducts: Product[] = [
   },
   {
     id: '7',
-    sku: 'REP-44444',
-    name: 'Kit de Embrague',
-    description: 'Kit completo de discos de embrague',
+    sku: 'RE-R200-142125',
+    name: 'Asiento Delantero & Posterior Set Chief II',
+    description: 'Set completo de asientos',
     category: {
       id: 'cat-7',
-      name: 'Embrague',
-      path: ['Repuestos', 'Transmisión', 'Embrague'],
+      name: 'Asientos',
+      path: ['Repuestos', 'Carrocería', 'Asientos'],
     },
     thumbnailImage: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100',
     totalStock: 8,
@@ -185,7 +186,7 @@ export const mockProducts: Product[] = [
   },
   {
     id: '8',
-    sku: 'REP-66666',
+    sku: 'RE-R250-K20415',
     name: 'Disco de Freno Ventilado',
     description: 'Disco de freno con ventilación interna',
     category: {
@@ -202,7 +203,7 @@ export const mockProducts: Product[] = [
   },
   {
     id: '9',
-    sku: 'REP-77777',
+    sku: 'RE-RNJ-330501',
     name: 'Batería 12V 7Ah',
     description: 'Batería de gel libre de mantenimiento',
     category: {
@@ -219,7 +220,7 @@ export const mockProducts: Product[] = [
   },
   {
     id: '10',
-    sku: 'REP-88888',
+    sku: 'RE-R250-L40820',
     name: 'Aceite Motor 10W-40 Sintético',
     description: 'Aceite sintético para motores 4 tiempos',
     category: {
@@ -237,36 +238,36 @@ export const mockProducts: Product[] = [
 ];
 
 // Mock Locations
-// Formato: Z[01-32]-P[a-g]-E[1-9]-N[1-5]
-// Z = Zona (1-32), P = Pasillo (a-g), E = Estante (1-9), N = Nivel (1-5)
+// Formato: Fila-Columna-Nivel (ej: 05-B-00)
+// Fila = número (01-99), Columna = letra (A-Z), Nivel = número (00-99)
 export const mockLocations: WarehouseLocation[] = [
-  // Zona 01 - Alta rotación (Clase A)
-  { id: '1', code: 'Z01-Pa-E1-N1', zone: '01', aisle: 'a', rack: 'E1', level: 'N1', type: 'storage', maxUnits: 100, currentUtilization: 0.65, status: 'active' },
-  { id: '2', code: 'Z01-Pa-E1-N2', zone: '01', aisle: 'a', rack: 'E1', level: 'N2', type: 'storage', maxUnits: 100, currentUtilization: 0.72, status: 'active' },
-  { id: '3', code: 'Z01-Pa-E2-N1', zone: '01', aisle: 'a', rack: 'E2', level: 'N1', type: 'storage', maxUnits: 120, currentUtilization: 0.45, status: 'active' },
-  { id: '4', code: 'Z01-Pa-E2-N2', zone: '01', aisle: 'a', rack: 'E2', level: 'N2', type: 'storage', maxUnits: 120, currentUtilization: 0.15, status: 'active' },
-  { id: '5', code: 'Z01-Pb-E1-N1', zone: '01', aisle: 'b', rack: 'E1', level: 'N1', type: 'storage', maxUnits: 100, currentUtilization: 0.80, status: 'active' },
-  { id: '6', code: 'Z01-Pb-E1-N2', zone: '01', aisle: 'b', rack: 'E1', level: 'N2', type: 'storage', maxUnits: 100, currentUtilization: 0.10, status: 'active' },
+  // Fila 05 - Alta rotación
+  { id: '1', code: '05-B-00', zone: '05', aisle: 'B', rack: '00', level: '00', type: 'storage', maxUnits: 100, currentUtilization: 0.65, status: 'active' },
+  { id: '2', code: '05-B-08', zone: '05', aisle: 'B', rack: '08', level: '08', type: 'storage', maxUnits: 100, currentUtilization: 0.72, status: 'active' },
+  { id: '3', code: '08-D-01', zone: '08', aisle: 'D', rack: '01', level: '01', type: 'storage', maxUnits: 120, currentUtilization: 0.45, status: 'active' },
+  { id: '4', code: '11-F-04', zone: '11', aisle: 'F', rack: '04', level: '04', type: 'storage', maxUnits: 120, currentUtilization: 0.15, status: 'active' },
+  { id: '5', code: '17-E-01', zone: '17', aisle: 'E', rack: '01', level: '01', type: 'storage', maxUnits: 100, currentUtilization: 0.80, status: 'active' },
+  { id: '6', code: '18-C-06', zone: '18', aisle: 'C', rack: '06', level: '06', type: 'storage', maxUnits: 100, currentUtilization: 0.10, status: 'active' },
 
-  // Zona 02 - Alta rotación
-  { id: '7', code: 'Z02-Pa-E1-N1', zone: '02', aisle: 'a', rack: 'E1', level: 'N1', type: 'storage', maxUnits: 150, currentUtilization: 0.55, status: 'active' },
-  { id: '8', code: 'Z02-Pa-E1-N2', zone: '02', aisle: 'a', rack: 'E1', level: 'N2', type: 'storage', maxUnits: 150, currentUtilization: 0.40, status: 'active' },
-  { id: '9', code: 'Z02-Pb-E3-N2', zone: '02', aisle: 'b', rack: 'E3', level: 'N2', type: 'storage', maxUnits: 150, currentUtilization: 0.68, status: 'active' },
-  { id: '10', code: 'Z02-Pc-E2-N1', zone: '02', aisle: 'c', rack: 'E2', level: 'N1', type: 'storage', maxUnits: 130, currentUtilization: 0.45, status: 'active' },
+  // Fila 23 - Alta rotación
+  { id: '7', code: '23-A-01', zone: '23', aisle: 'A', rack: '01', level: '01', type: 'storage', maxUnits: 150, currentUtilization: 0.55, status: 'active' },
+  { id: '8', code: '23-A-02', zone: '23', aisle: 'A', rack: '02', level: '02', type: 'storage', maxUnits: 150, currentUtilization: 0.40, status: 'active' },
+  { id: '9', code: '12-B-03', zone: '12', aisle: 'B', rack: '03', level: '03', type: 'storage', maxUnits: 150, currentUtilization: 0.68, status: 'active' },
+  { id: '10', code: '14-C-02', zone: '14', aisle: 'C', rack: '02', level: '02', type: 'storage', maxUnits: 130, currentUtilization: 0.45, status: 'active' },
 
-  // Zona 03 - Media rotación
-  { id: '11', code: 'Z03-Pa-E1-N1', zone: '03', aisle: 'a', rack: 'E1', level: 'N1', type: 'storage', maxUnits: 200, currentUtilization: 0.35, status: 'active' },
-  { id: '12', code: 'Z03-Pa-E1-N3', zone: '03', aisle: 'a', rack: 'E1', level: 'N3', type: 'storage', maxUnits: 180, currentUtilization: 0.22, status: 'active' },
-  { id: '13', code: 'Z03-Pd-E4-N3', zone: '03', aisle: 'd', rack: 'E4', level: 'N3', type: 'storage', maxUnits: 180, currentUtilization: 0.18, status: 'active' },
+  // Filas adicionales
+  { id: '11', code: '20-A-01', zone: '20', aisle: 'A', rack: '01', level: '01', type: 'storage', maxUnits: 200, currentUtilization: 0.35, status: 'active' },
+  { id: '12', code: '20-A-03', zone: '20', aisle: 'A', rack: '03', level: '03', type: 'storage', maxUnits: 180, currentUtilization: 0.22, status: 'active' },
+  { id: '13', code: '25-D-03', zone: '25', aisle: 'D', rack: '03', level: '03', type: 'storage', maxUnits: 180, currentUtilization: 0.18, status: 'active' },
 
-  // Zona 04 - Media rotación
-  { id: '14', code: 'Z04-Pa-E1-N1', zone: '04', aisle: 'a', rack: 'E1', level: 'N1', type: 'storage', maxUnits: 100, currentUtilization: 0.50, status: 'active' },
-  { id: '15', code: 'Z04-Pa-E2-N1', zone: '04', aisle: 'a', rack: 'E2', level: 'N1', type: 'storage', maxUnits: 100, currentUtilization: 0.60, status: 'active' },
-  { id: '16', code: 'Z04-Pb-E1-N1', zone: '04', aisle: 'b', rack: 'E1', level: 'N1', type: 'storage', maxUnits: 100, currentUtilization: 0.45, status: 'active' },
+  // Más ubicaciones
+  { id: '14', code: '30-A-01', zone: '30', aisle: 'A', rack: '01', level: '01', type: 'storage', maxUnits: 100, currentUtilization: 0.50, status: 'active' },
+  { id: '15', code: '30-A-02', zone: '30', aisle: 'A', rack: '02', level: '02', type: 'storage', maxUnits: 100, currentUtilization: 0.60, status: 'active' },
+  { id: '16', code: '30-B-01', zone: '30', aisle: 'B', rack: '01', level: '01', type: 'storage', maxUnits: 100, currentUtilization: 0.45, status: 'active' },
 
-  // Zona 05 - Baja rotación
-  { id: '17', code: 'Z05-Pa-E1-N1', zone: '05', aisle: 'a', rack: 'E1', level: 'N1', type: 'storage', maxUnits: 200, currentUtilization: 0.30, status: 'active' },
-  { id: '18', code: 'Z05-Pc-E2-N4', zone: '05', aisle: 'c', rack: 'E2', level: 'N4', type: 'storage', maxUnits: 180, currentUtilization: 0.25, status: 'active' },
+  // Baja rotación
+  { id: '17', code: '35-A-01', zone: '35', aisle: 'A', rack: '01', level: '01', type: 'storage', maxUnits: 200, currentUtilization: 0.30, status: 'active' },
+  { id: '18', code: '35-C-04', zone: '35', aisle: 'C', rack: '04', level: '04', type: 'storage', maxUnits: 180, currentUtilization: 0.25, status: 'active' },
 
   // Áreas de recepción y despacho
   { id: '19', code: 'RCV-01', zone: 'R', aisle: '00', rack: 'E0', level: 'N0', type: 'receiving', maxUnits: 500, currentUtilization: 0.12, status: 'active' },
@@ -277,7 +278,7 @@ export const mockLocations: WarehouseLocation[] = [
 ];
 
 // Mock Picking Orders
-// Ubicaciones actualizadas al formato: Z[01-32]-P[a-g]-E[1-9]-N[1-5]
+// Ubicaciones en formato: Fila-Columna-Nivel (ej: 05-B-00)
 export const mockOrders: PickingOrder[] = [
   {
     id: '1',
@@ -292,56 +293,56 @@ export const mockOrders: PickingOrder[] = [
     items: [
       {
         productId: '1',
-        productSku: 'REP-12345',
-        productName: 'Filtro de Aceite XYZ Premium',
+        productSku: 'RE-R250-H10313',
+        productName: 'Direccional Delantera LH',
         productImage: 'https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?w=100',
         requestedQuantity: 10,
         pickedQuantity: 0,
-        locationCode: 'Z01-Pa-E2-N1',
+        locationCode: '05-B-00',
         distance: 15,
         status: 'pending',
       },
       {
         productId: '2',
-        productSku: 'REP-98765',
-        productName: 'Pastilla de Freno Delantera',
+        productSku: 'RE-R250-I10312',
+        productName: 'Direccional Delantera RH',
         productImage: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100',
         requestedQuantity: 4,
         pickedQuantity: 0,
-        locationCode: 'Z02-Pb-E3-N2',
+        locationCode: '05-B-08',
         distance: 22,
         status: 'pending',
       },
       {
         productId: '4',
-        productSku: 'REP-11111',
-        productName: 'Amortiguador Delantero',
+        productSku: 'RE-R250-I0709',
+        productName: 'Estribo de Conductor C/Pedales Izq./Der.',
         productImage: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100',
         requestedQuantity: 2,
         pickedQuantity: 0,
-        locationCode: 'Z01-Pa-E1-N1',
+        locationCode: '11-F-04',
         distance: 8,
         status: 'pending',
       },
       {
         productId: '3',
-        productSku: 'REP-55555',
-        productName: 'Bujía NGK Iridium',
+        productSku: 'RE-R250-I10504',
+        productName: 'Comando Derecho Chief 4V Ninja 2.5/3.0',
         productImage: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100',
         requestedQuantity: 8,
         pickedQuantity: 0,
-        locationCode: 'Z01-Pb-E1-N1',
+        locationCode: '08-D-01',
         distance: 2,
         status: 'pending',
       },
       {
         productId: '9',
-        productSku: 'REP-77777',
+        productSku: 'RE-RNJ-330501',
         productName: 'Batería 12V 7Ah',
         productImage: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100',
         requestedQuantity: 3,
         pickedQuantity: 0,
-        locationCode: 'Z02-Pa-E1-N1',
+        locationCode: '23-A-01',
         distance: 18,
         status: 'pending',
       },
@@ -362,34 +363,34 @@ export const mockOrders: PickingOrder[] = [
     items: [
       {
         productId: '5',
-        productSku: 'REP-22222',
-        productName: 'Cadena de Transmisión 520',
+        productSku: 'RE-RNJ-250302',
+        productName: 'Cañería del Enfriador de Aceite Set 2pcs',
         productImage: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100',
         requestedQuantity: 5,
         pickedQuantity: 0,
-        locationCode: 'Z01-Pa-E1-N2',
+        locationCode: '17-E-01',
         distance: 12,
         status: 'pending',
       },
       {
         productId: '10',
-        productSku: 'REP-88888',
+        productSku: 'RE-R250-L40820',
         productName: 'Aceite Motor 10W-40 Sintético',
         productImage: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100',
         requestedQuantity: 12,
         pickedQuantity: 0,
-        locationCode: 'Z02-Pc-E2-N1',
+        locationCode: '14-C-02',
         distance: 25,
         status: 'pending',
       },
       {
         productId: '7',
-        productSku: 'REP-44444',
-        productName: 'Kit de Embrague',
+        productSku: 'RE-R200-142125',
+        productName: 'Asiento Delantero & Posterior Set Chief II',
         productImage: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100',
         requestedQuantity: 2,
         pickedQuantity: 0,
-        locationCode: 'Z02-Pa-E1-N2',
+        locationCode: '23-A-01',
         distance: 20,
         status: 'pending',
       },
@@ -409,23 +410,23 @@ export const mockOrders: PickingOrder[] = [
     items: [
       {
         productId: '6',
-        productSku: 'REP-33333',
-        productName: 'Llanta Delantera 17"',
+        productSku: 'RE-RNJ-110237',
+        productName: 'Piñón de Velocímetro Chief II',
         productImage: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100',
         requestedQuantity: 4,
         pickedQuantity: 0,
-        locationCode: 'Z03-Pa-E1-N1',
+        locationCode: '18-C-06',
         distance: 35,
         status: 'pending',
       },
       {
         productId: '8',
-        productSku: 'REP-66666',
+        productSku: 'RE-R250-K20415',
         productName: 'Disco de Freno Ventilado',
         productImage: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100',
         requestedQuantity: 6,
         pickedQuantity: 0,
-        locationCode: 'Z02-Pb-E3-N2',
+        locationCode: '12-B-03',
         distance: 22,
         status: 'pending',
       },
@@ -446,12 +447,12 @@ export const mockOrders: PickingOrder[] = [
     items: [
       {
         productId: '1',
-        productSku: 'REP-12345',
-        productName: 'Filtro de Aceite XYZ Premium',
+        productSku: 'RE-R250-H10313',
+        productName: 'Direccional Delantera LH',
         productImage: 'https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?w=100',
         requestedQuantity: 15,
         pickedQuantity: 0,
-        locationCode: 'Z01-Pa-E2-N1',
+        locationCode: '05-B-00',
         distance: 15,
         status: 'pending',
       },
@@ -472,23 +473,23 @@ export const mockOrders: PickingOrder[] = [
     items: [
       {
         productId: '9',
-        productSku: 'REP-77777',
+        productSku: 'RE-RNJ-330501',
         productName: 'Batería 12V 7Ah',
         productImage: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100',
         requestedQuantity: 6,
         pickedQuantity: 0,
-        locationCode: 'Z02-Pa-E1-N1',
+        locationCode: '23-A-01',
         distance: 18,
         status: 'pending',
       },
       {
         productId: '2',
-        productSku: 'REP-98765',
-        productName: 'Pastilla de Freno Delantera',
+        productSku: 'RE-R250-I10312',
+        productName: 'Direccional Delantera RH',
         productImage: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100',
         requestedQuantity: 8,
         pickedQuantity: 0,
-        locationCode: 'Z02-Pb-E3-N2',
+        locationCode: '05-B-08',
         distance: 22,
         status: 'pending',
       },

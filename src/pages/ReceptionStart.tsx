@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Search, HelpCircle, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Search, HelpCircle, AlertCircle, ScanBarcode } from 'lucide-react';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
 import Card from '../components/ui/Card';
+import { QRScannerWrapper } from '../components/scanner/QRScannerWrapper';
 import { mockApi } from '../services/mockApi';
 
 const ReceptionStart: React.FC = () => {
@@ -14,6 +15,7 @@ const ReceptionStart: React.FC = () => {
   const [supplier, setSupplier] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showScanner, setShowScanner] = useState(false);
 
   const reasons = [
     'Compra local sin OC',
@@ -35,7 +37,7 @@ const ReceptionStart: React.FC = () => {
       const order = await mockApi.orders.getByNumber(orderNumber);
       if (order) {
         // Navigate to product scanning with order data
-        navigate('/reception/scan', { state: { order } });
+        navigate('/reception/scan', { state: { order, hasOrder: true } });
       } else {
         setError('Orden no encontrada. Verifique el número e intente nuevamente.');
       }
@@ -44,6 +46,34 @@ const ReceptionStart: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Manejar escaneo de código de barras de orden de compra
+  const handleOrderBarcodeScan = (barcode: string) => {
+    // Simular que el código de barras devuelve el número de orden
+    let orderNum = barcode;
+    if (barcode.startsWith('SS:OC:')) {
+      orderNum = barcode.substring(6);
+    }
+
+    setOrderNumber(orderNum);
+    setShowScanner(false);
+
+    // Buscar automáticamente después de escanear
+    setError('');
+    setIsLoading(true);
+
+    mockApi.orders.getByNumber(orderNum).then(order => {
+      if (order) {
+        navigate('/reception/scan', { state: { order, hasOrder: true } });
+      } else {
+        setError('Orden no encontrada. Verifique el número e intente nuevamente.');
+      }
+    }).catch(() => {
+      setError('Error al buscar la orden. Intente nuevamente.');
+    }).finally(() => {
+      setIsLoading(false);
+    });
   };
 
   const handleContinue = () => {
@@ -112,13 +142,6 @@ const ReceptionStart: React.FC = () => {
             <div className="h-10 w-10 rounded-full bg-border-light text-text-tertiary flex items-center justify-center font-semibold">
               3
             </div>
-            <span className="text-xs text-text-tertiary">Ubicación</span>
-          </div>
-          <div className="flex-1 h-1 bg-border-light mx-2" />
-          <div className="flex flex-col items-center gap-1">
-            <div className="h-10 w-10 rounded-full bg-border-light text-text-tertiary flex items-center justify-center font-semibold">
-              4
-            </div>
             <span className="text-xs text-text-tertiary">Confirmar</span>
           </div>
         </div>
@@ -174,7 +197,19 @@ const ReceptionStart: React.FC = () => {
               >
                 <Search className="h-5 w-5" />
               </Button>
+              <button
+                onClick={() => setShowScanner(true)}
+                className="w-14 h-14 bg-blue-500 rounded-xl flex items-center justify-center active:scale-95 transition-transform flex-shrink-0"
+                title="Escanear código de barras de OC"
+                disabled={isLoading}
+              >
+                <ScanBarcode className="w-6 h-6 text-white" />
+              </button>
             </div>
+
+            <p className="text-xs text-text-tertiary">
+              Puede escribir el número de orden o escanear el código de barras de la orden de compra
+            </p>
 
             {error && (
               <Card variant="outlined" className="bg-error-bg border-error">
@@ -273,6 +308,18 @@ const ReceptionStart: React.FC = () => {
           Cancelar
         </Button>
       </div>
+
+      {/* Barcode Scanner Modal for Order */}
+      {showScanner && (
+        <QRScannerWrapper
+          onScan={handleOrderBarcodeScan}
+          onClose={() => setShowScanner(false)}
+          title="Escanear Orden de Compra"
+          subtitle="Escanea el código de barras de la OC"
+          expectedType="order"
+          simulateValue="OC-2025-001234"
+        />
+      )}
     </div>
   );
 };

@@ -14,6 +14,11 @@ export interface DispatchLabelData {
     code: string;
     description: string;
     quantity: number;
+    replacement?: {
+      code: string;
+      description: string;
+      quantity: number;
+    };
   }[];
 }
 
@@ -121,7 +126,7 @@ export function generateDispatchLabelPdf(data: DispatchLabelData): void {
   let totalQuantity = 0;
   data.items.forEach((item) => {
     // Check if we need a new page
-    if (y > 130) {
+    if (y > 125) {
       doc.addPage();
       y = 10;
     }
@@ -139,6 +144,29 @@ export function generateDispatchLabelPdf(data: DispatchLabelData): void {
 
     totalQuantity += item.quantity;
     y += 5;
+
+    // If there's a replacement, show it indented below
+    if (item.replacement && item.replacement.quantity > 0) {
+      doc.setFontSize(6);
+      doc.setTextColor(0, 100, 180); // Blue color for replacement
+
+      // Replacement indicator
+      doc.text('↳ REEMPLAZO:', margin + 2, y);
+      doc.text(item.replacement.code, margin + 25, y);
+      doc.text(item.replacement.quantity.toString(), pageWidth - margin - 5, y, { align: 'right' });
+      y += 4;
+
+      // Replacement description
+      const replDescLines = doc.splitTextToSize(item.replacement.description, descMaxWidth - 5);
+      doc.text(replDescLines[0], margin + 25, y);
+
+      totalQuantity += item.replacement.quantity;
+      y += 5;
+
+      // Reset color
+      doc.setTextColor(0, 0, 0);
+      doc.setFontSize(7);
+    }
   });
 
   // ==================== TOTAL ====================
@@ -164,6 +192,15 @@ export function generateDispatchLabelPdf(data: DispatchLabelData): void {
 }
 
 /**
+ * Replacement info type
+ */
+export interface ReplacementInfo {
+  sku: string;
+  name: string;
+  qty: number;
+}
+
+/**
  * Generates a dispatch label from a picking order
  */
 export function generateLabelFromOrder(
@@ -177,10 +214,12 @@ export function generateLabelFromOrder(
       productSku: string;
       productName: string;
       requestedQuantity: number;
+      pickedQuantity?: number;
     }[];
   },
   cartonNumber: number = 1,
-  totalCartons: number = 1
+  totalCartons: number = 1,
+  replacementsUsed?: Record<string, ReplacementInfo>
 ): void {
   const labelData: DispatchLabelData = {
     dispatchNumber: order.orderNumber,
@@ -196,11 +235,23 @@ export function generateLabelFromOrder(
       code: generateClientCode(order.destination.name),
       address: order.destination.address || 'Sin dirección especificada',
     },
-    items: order.items.map((item) => ({
-      code: item.productSku,
-      description: item.productName,
-      quantity: item.requestedQuantity,
-    })),
+    items: order.items.map((item) => {
+      const replacement = replacementsUsed?.[item.productSku];
+      const originalQty = replacement
+        ? (item.pickedQuantity || item.requestedQuantity) - replacement.qty
+        : item.pickedQuantity || item.requestedQuantity;
+
+      return {
+        code: item.productSku,
+        description: item.productName,
+        quantity: originalQty,
+        replacement: replacement ? {
+          code: replacement.sku,
+          description: replacement.name,
+          quantity: replacement.qty,
+        } : undefined,
+      };
+    }),
   };
 
   generateDispatchLabelPdf(labelData);

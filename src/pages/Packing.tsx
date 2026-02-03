@@ -1,13 +1,24 @@
 import React, { useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { CheckCircle2, Camera, Printer, Package, AlertTriangle, X } from 'lucide-react';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
+import { CheckCircle2, Camera, Printer, Package, AlertTriangle, X, RefreshCw } from 'lucide-react';
 import Button from '../components/ui/Button';
-import { mockOrders } from '../data/mockData';
-import { generateLabelFromOrder } from '../utils/dispatchLabelPdf';
+import { mockOrders, type PickingItem } from '../data/mockData';
+import { generateLabelFromOrder, type ReplacementInfo } from '../utils/dispatchLabelPdf';
+
+interface LocationState {
+  pickedItems?: PickingItem[];
+  replacementsUsed?: Record<string, ReplacementInfo>;
+}
 
 const Packing: React.FC = () => {
   const { orderId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  const locationState = location.state as LocationState | null;
+
+  // Obtener datos de picking (items con cantidades recolectadas y reemplazos)
+  const pickedItems = locationState?.pickedItems;
+  const replacementsUsed = locationState?.replacementsUsed || {};
   const [checklist, setChecklist] = useState({
     packed: false,
     verified: false,
@@ -30,15 +41,27 @@ const Packing: React.FC = () => {
   // Permitir continuar si todo está verificado O si se reportó un problema
   const canProceed = allChecked || issueReported;
 
+  // Combinar datos del pedido con las cantidades realmente recolectadas
+  const orderWithPickedData = {
+    ...order,
+    items: order.items.map(item => {
+      const pickedItem = pickedItems?.find(p => p.productSku === item.productSku);
+      return {
+        ...item,
+        pickedQuantity: pickedItem?.pickedQuantity ?? item.requestedQuantity,
+      };
+    }),
+  };
+
   const handleGenerateLabel = (cartonNumber: number) => {
-    generateLabelFromOrder(order, cartonNumber, cartonCount);
+    generateLabelFromOrder(orderWithPickedData, cartonNumber, cartonCount, replacementsUsed);
     setGeneratedLabels((prev) => [...prev, cartonNumber]);
   };
 
   const handleGenerateAllLabels = () => {
     for (let i = 1; i <= cartonCount; i++) {
       setTimeout(() => {
-        generateLabelFromOrder(order, i, cartonCount);
+        generateLabelFromOrder(orderWithPickedData, i, cartonCount, replacementsUsed);
       }, i * 300); // Small delay between each PDF
     }
     setGeneratedLabels(Array.from({ length: cartonCount }, (_, i) => i + 1));
@@ -78,6 +101,35 @@ const Packing: React.FC = () => {
           <p className="text-blue-600 mt-1">⏱️ Tiempo de picking: 12 min</p>
         </div>
       </div>
+
+      {/* Productos con reemplazos */}
+      {Object.keys(replacementsUsed).length > 0 && (
+        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-4">
+          <div className="flex items-center gap-2 mb-3">
+            <RefreshCw className="w-5 h-5 text-blue-600" />
+            <p className="text-sm font-semibold text-blue-800">Productos con reemplazo</p>
+          </div>
+          <div className="space-y-2">
+            {Object.entries(replacementsUsed).map(([originalSku, replacement]) => {
+              const originalItem = order.items.find(i => i.productSku === originalSku);
+              return (
+                <div key={originalSku} className="bg-white rounded-lg p-3 text-sm">
+                  <p className="font-medium text-gray-900">{originalItem?.productName || originalSku}</p>
+                  <div className="flex items-center gap-1 mt-1 text-blue-600">
+                    <span className="text-xs">↳</span>
+                    <span className="text-xs font-medium">+{replacement.qty} und de:</span>
+                    <span className="text-xs">{replacement.name}</span>
+                  </div>
+                  <p className="text-xs text-gray-500 font-mono mt-1">{replacement.sku}</p>
+                </div>
+              );
+            })}
+          </div>
+          <p className="text-xs text-blue-600 mt-3">
+            ℹ️ Los reemplazos se mostrarán en las etiquetas generadas
+          </p>
+        </div>
+      )}
 
       {/* Checklist */}
       <div className="bg-white rounded-xl shadow-sm p-4 mb-4">

@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, MapPin, ScanBarcode, Minus, Plus, CheckCircle2, Package, X, AlertTriangle, Bell } from 'lucide-react';
+import { ArrowLeft, MapPin, ScanBarcode, Minus, Plus, CheckCircle2, Package, X, AlertTriangle, Bell, RefreshCw } from 'lucide-react';
 import { QRScannerWrapper } from '../components/scanner/QRScannerWrapper';
 import Button from '../components/ui/Button';
 import { mockOrders, type PickingItem } from '../data/mockData';
@@ -13,59 +13,74 @@ interface ShelfProduct {
   availableQuantity: number;
 }
 
-// Inventario por ubicación con nuevo formato: Z[01-32]-P[a-g]-E[1-9]-N[1-5]
+// Inventario por ubicación con formato: Fila-Columna-Nivel (ej: 05-B-00)
 const mockShelfInventory: Record<string, ShelfProduct[]> = {
-  // Zona 01 - Pasillo a
-  'Z01-Pa-E1-N1': [
-    { sku: 'REP-11111', name: 'Amortiguador Delantero', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 28 },
+  // Fila 05
+  '05-B-00': [
+    { sku: 'RE-R250-H10313', name: 'Direccional Delantera LH', image: 'https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?w=100', availableQuantity: 50 },
   ],
-  'Z01-Pa-E1-N2': [
-    { sku: 'REP-22222', name: 'Cadena de Transmisión 520', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 67 },
+  '05-B-08': [
+    { sku: 'RE-R250-I10312', name: 'Direccional Delantera RH', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 30 },
   ],
-  'Z01-Pa-E2-N1': [
-    { sku: 'REP-12345', name: 'Filtro de Aceite XYZ Premium', image: 'https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?w=100', availableQuantity: 50 },
-    { sku: 'REP-55555', name: 'Bujía NGK Iridium', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 8 },
+  // Fila 08
+  '08-D-01': [
+    { sku: 'RE-R250-I10504', name: 'Comando Derecho Chief 4V Ninja 2.5/3.0', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 3 },
   ],
-  'Z01-Pa-E2-N2': [
-    { sku: 'REP-98765', name: 'Pastilla de Freno Delantera', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 30 },
+  // Fila 11
+  '11-F-04': [
+    { sku: 'RE-R250-I0709', name: 'Estribo de Conductor C/Pedales Izq./Der.', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 28 },
   ],
-  // Zona 01 - Pasillo b
-  'Z01-Pb-E1-N1': [
-    { sku: 'REP-55555', name: 'Bujía NGK Iridium', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 3 },
+  // Fila 12
+  '12-B-03': [
+    { sku: 'RE-R250-K20415', name: 'Disco de Freno Ventilado', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 22 },
   ],
-  'Z01-Pb-E1-N2': [
-    { sku: 'REP-12345', name: 'Filtro de Aceite XYZ Premium', image: 'https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?w=100', availableQuantity: 25 },
+  // Fila 14
+  '14-C-02': [
+    { sku: 'RE-R250-L40820', name: 'Aceite Motor 10W-40 Sintético', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 120 },
   ],
-  // Zona 02 - Pasillo a
-  'Z02-Pa-E1-N1': [
-    { sku: 'REP-77777', name: 'Batería 12V 7Ah', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 35 },
+  // Fila 17
+  '17-E-01': [
+    { sku: 'RE-RNJ-250302', name: 'Cañería del Enfriador de Aceite Set 2pcs', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 67 },
   ],
-  'Z02-Pa-E1-N2': [
-    { sku: 'REP-44444', name: 'Kit de Embrague', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 8 },
+  // Fila 18
+  '18-C-06': [
+    { sku: 'RE-RNJ-110237', name: 'Piñón de Velocímetro Chief II', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 15 },
   ],
-  // Zona 02 - Pasillo b
-  'Z02-Pb-E3-N2': [
-    { sku: 'REP-98765', name: 'Pastilla de Freno Delantera', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 12 },
-    { sku: 'REP-66666', name: 'Disco de Freno Ventilado', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 22 },
-  ],
-  // Zona 02 - Pasillo c
-  'Z02-Pc-E2-N1': [
-    { sku: 'REP-88888', name: 'Aceite Motor 10W-40 Sintético', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 120 },
-  ],
-  // Zona 03 - Pasillo a
-  'Z03-Pa-E1-N1': [
-    { sku: 'REP-33333', name: 'Llanta Delantera 17"', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 15 },
+  // Fila 23
+  '23-A-01': [
+    { sku: 'RE-RNJ-330501', name: 'Batería 12V 7Ah', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 35 },
+    { sku: 'RE-R200-142125', name: 'Asiento Delantero & Posterior Set Chief II', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 8 },
   ],
 };
 
-// Parsear ubicación para ordenar
+// Mapa de reemplazos de productos (simulación de algoritmo de concordancia)
+// Cada producto tiene un reemplazo "similar" - en producción sería un algoritmo real
+interface ProductReplacement {
+  sku: string;
+  name: string;
+  location: string;
+}
+
+const productReplacements: Record<string, ProductReplacement> = {
+  'RE-R250-H10313': { sku: 'RE-R250-I10312', name: 'Direccional Delantera RH', location: '05-B-08' },
+  'RE-R250-I10312': { sku: 'RE-R250-H10313', name: 'Direccional Delantera LH', location: '05-B-00' },
+  'RE-R250-I10504': { sku: 'RE-R250-I0709', name: 'Estribo de Conductor C/Pedales', location: '11-F-04' },
+  'RE-R250-I0709': { sku: 'RE-R250-I10504', name: 'Comando Derecho Chief 4V', location: '08-D-01' },
+  'RE-RNJ-250302': { sku: 'RE-R250-L40820', name: 'Aceite Motor 10W-40 Sintético', location: '14-C-02' },
+  'RE-RNJ-110237': { sku: 'RE-R250-K20415', name: 'Disco de Freno Ventilado', location: '12-B-03' },
+  'RE-R200-142125': { sku: 'RE-RNJ-330501', name: 'Batería 12V 7Ah', location: '23-A-01' },
+  'RE-R250-K20415': { sku: 'RE-RNJ-110237', name: 'Piñón de Velocímetro Chief II', location: '18-C-06' },
+  'RE-RNJ-330501': { sku: 'RE-R200-142125', name: 'Asiento Delantero & Posterior Set', location: '23-A-01' },
+  'RE-R250-L40820': { sku: 'RE-RNJ-250302', name: 'Cañería del Enfriador de Aceite', location: '17-E-01' },
+};
+
+// Parsear ubicación para ordenar (formato: Fila-Columna-Nivel)
 const parseLocation = (loc: string) => {
   const parts = loc.split('-');
   return {
-    zona: parseInt(parts[0]?.replace('Z', '') || '0'),
-    pasillo: parts[1]?.replace('P', '') || '',
-    estante: parseInt(parts[2]?.replace('E', '') || '0'),
-    nivel: parseInt(parts[3]?.replace('N', '') || '0'),
+    fila: parseInt(parts[0] || '0'),
+    columna: parts[1] || '',
+    nivel: parseInt(parts[2] || '0'),
   };
 };
 
@@ -86,15 +101,28 @@ const PickingProcess: React.FC = () => {
   const [selectedItemIndex, setSelectedItemIndex] = useState<number | null>(null);
   const [quantity, setQuantity] = useState(0);
 
+  // Estado para reemplazos y notificaciones
+  const [showReplacementModal, setShowReplacementModal] = useState(false);
+  const [replacementInfo, setReplacementInfo] = useState<{
+    originalSku: string;
+    originalName: string;
+    requestedQty: number;
+    originalStock: number;
+    replacement: ProductReplacement | null;
+    replacementStock: number;
+  } | null>(null);
+  const [originalQtyToUse, setOriginalQtyToUse] = useState(0);
+  const [replacementQtyToUse, setReplacementQtyToUse] = useState(0);
+  const [replacementsUsed, setReplacementsUsed] = useState<Record<string, { sku: string; name: string; qty: number }>>({});
+
   // Ordenar items por ubicación (debe estar antes del return condicional)
   const sortedItems = useMemo(() => {
     return [...items].sort((a, b) => {
       const locA = parseLocation(a.locationCode);
       const locB = parseLocation(b.locationCode);
 
-      if (locA.zona !== locB.zona) return locA.zona - locB.zona;
-      if (locA.pasillo !== locB.pasillo) return locA.pasillo.localeCompare(locB.pasillo);
-      if (locA.estante !== locB.estante) return locA.estante - locB.estante;
+      if (locA.fila !== locB.fila) return locA.fila - locB.fila;
+      if (locA.columna !== locB.columna) return locA.columna.localeCompare(locB.columna);
       return locA.nivel - locB.nivel;
     });
   }, [items]);
@@ -183,9 +211,131 @@ const PickingProcess: React.FC = () => {
 
   const handleCancelModal = () => {
     setShowQuantityModal(false);
+    setShowReplacementModal(false);
     setSelectedItemIndex(null);
     setQuantity(0);
     setScanningItemIndex(null);
+    setReplacementInfo(null);
+  };
+
+  // Obtener stock de un producto por SKU (busca en todo el inventario)
+  const getStockBySku = (sku: string): number => {
+    for (const locationProducts of Object.values(shelfInventory)) {
+      const product = locationProducts.find(p => p.sku === sku);
+      if (product) return product.availableQuantity;
+    }
+    return 0;
+  };
+
+  // Buscar reemplazo disponible (cadena de reemplazos)
+  const findAvailableReplacement = (originalSku: string, visited: Set<string> = new Set()): { replacement: ProductReplacement; stock: number } | null => {
+    if (visited.has(originalSku)) return null;
+    visited.add(originalSku);
+
+    const replacement = productReplacements[originalSku];
+    if (!replacement) return null;
+
+    const stock = getStockBySku(replacement.sku);
+    if (stock > 0) {
+      return { replacement, stock };
+    }
+
+    // Buscar en la cadena de reemplazos
+    return findAvailableReplacement(replacement.sku, visited);
+  };
+
+  // Iniciar proceso de reemplazo
+  const handleStartReplacement = () => {
+    if (selectedItemIndex === null) return;
+    const item = sortedItems[selectedItemIndex];
+    const availableStock = getAvailableStock(item);
+
+    const replacementResult = findAvailableReplacement(item.productSku);
+    const replacementStock = replacementResult?.stock || 0;
+
+    // Calcular valores iniciales: usar todo el stock original + lo que falta del reemplazo
+    const missingQty = item.requestedQuantity - availableStock;
+    const initialReplacementQty = Math.min(missingQty, replacementStock);
+
+    setOriginalQtyToUse(availableStock);
+    setReplacementQtyToUse(initialReplacementQty);
+
+    setReplacementInfo({
+      originalSku: item.productSku,
+      originalName: item.productName,
+      requestedQty: item.requestedQuantity,
+      originalStock: availableStock,
+      replacement: replacementResult?.replacement || null,
+      replacementStock: replacementStock,
+    });
+    setShowReplacementModal(true);
+  };
+
+  // Confirmar reemplazo con cantidades flexibles
+  const handleConfirmReplacement = (qtyToReplace: number) => {
+    if (!replacementInfo || !replacementInfo.replacement || selectedItemIndex === null) return;
+
+    const item = sortedItems[selectedItemIndex];
+    const originalIndex = items.findIndex(i => i.productSku === item.productSku && i.locationCode === item.locationCode);
+    if (originalIndex === -1) return;
+
+    // Guardar info de reemplazo usado (solo si se usa reemplazo)
+    if (qtyToReplace > 0) {
+      setReplacementsUsed(prev => ({
+        ...prev,
+        [item.productSku]: {
+          sku: replacementInfo.replacement!.sku,
+          name: replacementInfo.replacement!.name,
+          qty: qtyToReplace,
+        },
+      }));
+    }
+
+    // Actualizar item con cantidad original + reemplazo (usando valores del estado)
+    const updatedItems = [...items];
+    updatedItems[originalIndex] = {
+      ...items[originalIndex],
+      status: 'picked',
+      pickedQuantity: originalQtyToUse + qtyToReplace, // cantidad original seleccionada + reemplazo
+    };
+    setItems(updatedItems);
+
+    // Restar del inventario original (solo la cantidad seleccionada)
+    const updatedInventory = { ...shelfInventory };
+    const locationProducts = [...(updatedInventory[item.locationCode] || [])];
+    const productIndex = locationProducts.findIndex(p => p.sku === item.productSku);
+    if (productIndex >= 0) {
+      locationProducts[productIndex] = {
+        ...locationProducts[productIndex],
+        availableQuantity: locationProducts[productIndex].availableQuantity - originalQtyToUse,
+      };
+      updatedInventory[item.locationCode] = locationProducts;
+    }
+
+    // Restar del inventario del reemplazo (solo si se usa)
+    if (qtyToReplace > 0) {
+      const replacementLocation = replacementInfo.replacement.location;
+      const replacementProducts = [...(updatedInventory[replacementLocation] || [])];
+      const replacementProductIndex = replacementProducts.findIndex(p => p.sku === replacementInfo.replacement!.sku);
+      if (replacementProductIndex >= 0) {
+        replacementProducts[replacementProductIndex] = {
+          ...replacementProducts[replacementProductIndex],
+          availableQuantity: replacementProducts[replacementProductIndex].availableQuantity - qtyToReplace,
+        };
+        updatedInventory[replacementLocation] = replacementProducts;
+      }
+    }
+
+    setShelfInventory(updatedInventory);
+
+    // Cerrar modales y limpiar estado
+    setShowQuantityModal(false);
+    setShowReplacementModal(false);
+    setSelectedItemIndex(null);
+    setQuantity(0);
+    setReplacementInfo(null);
+    setOriginalQtyToUse(0);
+    setReplacementQtyToUse(0);
   };
 
   const selectedItem = selectedItemIndex !== null ? sortedItems[selectedItemIndex] : null;
@@ -225,61 +375,71 @@ const PickingProcess: React.FC = () => {
 
       {/* Lista de productos ordenada por ubicación */}
       <div className="flex-1 p-4 pb-28 overflow-y-auto">
-        {/* Encabezado de tabla */}
-        <div className="bg-gray-100 rounded-t-xl px-3 py-2 grid grid-cols-12 gap-2 text-xs font-semibold text-gray-600 sticky top-0">
-          <div className="col-span-2">Ubicación</div>
-          <div className="col-span-2">Código</div>
-          <div className="col-span-4">Producto</div>
-          <div className="col-span-1 text-center">Pedido</div>
-          <div className="col-span-1 text-center">Conf.</div>
-          <div className="col-span-2 text-center">Acción</div>
-        </div>
+        {/* Contenedor con scroll horizontal para móvil */}
+        <div className="overflow-x-auto -mx-4 px-4">
+          <div className="min-w-[650px]">
+            {/* Encabezado de tabla */}
+            <div className="bg-gray-100 rounded-t-xl px-4 py-3 grid grid-cols-12 gap-4 text-xs font-semibold text-gray-600">
+              <div className="col-span-2">Ubicación</div>
+              <div className="col-span-3">Código</div>
+              <div className="col-span-3">Producto</div>
+              <div className="col-span-1 text-center">Ped.</div>
+              <div className="col-span-1 text-center">Conf.</div>
+              <div className="col-span-2 text-center">Acción</div>
+            </div>
 
-        <div className="bg-white rounded-b-xl shadow-sm overflow-hidden">
+            <div className="bg-white rounded-b-xl shadow-sm overflow-hidden">
           {sortedItems.map((item, index) => {
             const availableStock = getAvailableStock(item);
             const isPicked = item.status === 'picked';
             const hasStockIssue = availableStock < item.requestedQuantity;
+            const hasReplacement = replacementsUsed[item.productSku];
 
             return (
               <div
                 key={`${item.productSku}-${item.locationCode}`}
-                className={`grid grid-cols-12 gap-2 px-3 py-3 border-b border-gray-100 last:border-none items-center ${
-                  isPicked ? 'bg-green-50' : hasStockIssue ? 'bg-yellow-50' : ''
+                className={`grid grid-cols-12 gap-3 px-4 py-4 border-b border-gray-100 last:border-none items-center ${
+                  isPicked ? (hasReplacement ? 'bg-blue-50' : 'bg-green-50') : hasStockIssue ? 'bg-yellow-50' : ''
                 }`}
               >
                 {/* Ubicación */}
                 <div className="col-span-2">
                   <div className="flex items-center gap-1">
-                    <MapPin className={`w-3 h-3 flex-shrink-0 ${isPicked ? 'text-green-600' : 'text-blue-500'}`} />
-                    <span className="text-xs font-bold font-mono text-blue-600 break-all">{item.locationCode}</span>
+                    <MapPin className={`w-4 h-4 flex-shrink-0 ${isPicked ? 'text-green-600' : 'text-blue-500'}`} />
+                    <span className="text-sm font-bold font-mono text-blue-600">{item.locationCode}</span>
                   </div>
                 </div>
 
                 {/* Código */}
-                <div className="col-span-2">
-                  <span className="text-xs font-mono text-gray-600 break-all">{item.productSku}</span>
+                <div className="col-span-3">
+                  <span className="text-xs font-mono text-gray-600 break-all leading-tight">{item.productSku}</span>
                 </div>
 
                 {/* Nombre del Producto */}
-                <div className="col-span-4">
-                  <p className="text-xs font-medium text-gray-900 line-clamp-2">{item.productName}</p>
+                <div className="col-span-3">
+                  <p className="text-xs font-medium text-gray-900 line-clamp-2 leading-tight">{item.productName}</p>
                   {hasStockIssue && !isPicked && (
-                    <div className="flex items-center gap-1 text-xs text-yellow-700 mt-0.5">
+                    <div className="flex items-center gap-1 text-xs text-yellow-700 mt-1">
                       <AlertTriangle className="w-3 h-3" />
                       <span>Stock bajo ({availableStock})</span>
+                    </div>
+                  )}
+                  {hasReplacement && isPicked && (
+                    <div className="flex items-center gap-1 text-xs text-blue-600 mt-1">
+                      <RefreshCw className="w-3 h-3" />
+                      <span>+{hasReplacement.qty} de {hasReplacement.sku.slice(-6)}</span>
                     </div>
                   )}
                 </div>
 
                 {/* Cantidad Pedida */}
                 <div className="col-span-1 text-center">
-                  <span className="text-sm font-bold text-blue-600">{item.requestedQuantity}</span>
+                  <span className="text-base font-bold text-blue-600">{item.requestedQuantity}</span>
                 </div>
 
                 {/* Cantidad Confirmada */}
                 <div className="col-span-1 text-center">
-                  <span className={`text-sm font-bold ${isPicked ? 'text-green-600' : 'text-gray-400'}`}>
+                  <span className={`text-base font-bold ${isPicked ? 'text-green-600' : 'text-gray-400'}`}>
                     {item.pickedQuantity}
                   </span>
                 </div>
@@ -289,20 +449,22 @@ const PickingProcess: React.FC = () => {
                   {!isPicked ? (
                     <button
                       onClick={() => handleStartScan(index)}
-                      className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center active:scale-95 transition-transform"
+                      className="w-11 h-11 bg-blue-500 rounded-xl flex items-center justify-center active:scale-95 transition-transform"
                       title="Escanear estantería"
                     >
-                      <ScanBarcode className="w-5 h-5 text-white" />
+                      <ScanBarcode className="w-6 h-6 text-white" />
                     </button>
                   ) : (
-                    <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                      <CheckCircle2 className="w-5 h-5 text-green-500" />
+                    <div className="w-11 h-11 bg-green-100 rounded-xl flex items-center justify-center">
+                      <CheckCircle2 className="w-6 h-6 text-green-500" />
                     </div>
                   )}
                 </div>
               </div>
             );
           })}
+            </div>
+          </div>
         </div>
 
         {/* Estado vacío */}
@@ -328,7 +490,12 @@ const PickingProcess: React.FC = () => {
           )}
         </div>
         <Button
-          onClick={() => navigate(`/dispatch/packing/${orderId}`)}
+          onClick={() => navigate(`/dispatch/packing/${orderId}`, {
+            state: {
+              pickedItems: items,
+              replacementsUsed: replacementsUsed,
+            }
+          })}
           disabled={!allCompleted}
           fullWidth
         >
@@ -385,13 +552,17 @@ const PickingProcess: React.FC = () => {
 
             <div className="flex items-center justify-center gap-4 mb-4">
               <button
-                onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                onClick={() => setQuantity(Math.max(0, quantity - 1))}
                 className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center active:scale-95 transition-transform"
               >
                 <Minus className="w-5 h-5 text-gray-700" />
               </button>
-              <div className="bg-blue-50 rounded-xl px-6 py-4 min-w-[100px] text-center">
-                <span className="text-4xl font-bold text-gray-900">{quantity}</span>
+              <div className={`rounded-xl px-6 py-4 min-w-[100px] text-center ${
+                quantity >= selectedItem.requestedQuantity ? 'bg-green-50' : 'bg-blue-50'
+              }`}>
+                <span className={`text-4xl font-bold ${
+                  quantity >= selectedItem.requestedQuantity ? 'text-green-600' : 'text-gray-900'
+                }`}>{quantity}</span>
               </div>
               <button
                 onClick={() => setQuantity(Math.min(selectedAvailableStock, quantity + 1))}
@@ -401,41 +572,210 @@ const PickingProcess: React.FC = () => {
               </button>
             </div>
 
+            {/* Validación de cantidad - similar a reemplazos */}
+            <div className={`rounded-lg p-3 mb-4 ${
+              quantity >= selectedItem.requestedQuantity
+                ? 'bg-green-100 border border-green-300'
+                : 'bg-red-100 border border-red-300'
+            }`}>
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-gray-700">Cantidad a despachar:</span>
+                <span className={`text-xl font-bold ${
+                  quantity >= selectedItem.requestedQuantity ? 'text-green-700' : 'text-red-700'
+                }`}>
+                  {quantity} / {selectedItem.requestedQuantity}
+                </span>
+              </div>
+              {quantity < selectedItem.requestedQuantity && (
+                <p className="text-xs text-red-600 mt-1">
+                  ⚠️ Faltan {selectedItem.requestedQuantity - quantity} unidades para completar el pedido
+                </p>
+              )}
+              {quantity >= selectedItem.requestedQuantity && (
+                <p className="text-xs text-green-600 mt-1">
+                  ✓ Cantidad completa
+                </p>
+              )}
+            </div>
+
             <div className="flex items-center justify-between text-sm text-gray-600 mb-2">
               <span>Pedido: <strong>{selectedItem.requestedQuantity}</strong></span>
               <span>Disponible: <strong>{selectedAvailableStock}</strong></span>
             </div>
 
             {/* Warning si no alcanza */}
-            {selectedAvailableStock < selectedItem.requestedQuantity && (
+            {selectedAvailableStock < selectedItem.requestedQuantity && !showReplacementModal && (
               <div className="bg-yellow-50 border border-yellow-300 rounded-lg px-3 py-2 mb-4">
                 <div className="flex items-start gap-2">
                   <AlertTriangle className="w-4 h-4 text-yellow-600 mt-0.5 flex-shrink-0" />
                   <div className="flex-1">
                     <p className="text-xs text-yellow-800 font-semibold">
-                      Stock insuficiente
+                      Stock insuficiente - Faltan {selectedItem.requestedQuantity - selectedAvailableStock} unidades
                     </p>
-                    <p className="text-xs text-yellow-700">
+                    <p className="text-xs text-yellow-700 mb-2">
                       Solo hay {selectedAvailableStock} disponibles de {selectedItem.requestedQuantity} solicitados.
                     </p>
-                    {stockAlertSent[selectedItem.productSku] ? (
-                      <div className="flex items-center gap-1 mt-2 text-green-600">
-                        <CheckCircle2 className="w-3 h-3" />
-                        <span className="text-xs font-medium">Alerta enviada al supervisor</span>
-                      </div>
-                    ) : (
+
+                    <div className="flex flex-col gap-2">
+                      {/* Opción 1: Notificar problema */}
+                      {stockAlertSent[selectedItem.productSku] ? (
+                        <div className="flex items-center gap-1 text-green-600 bg-green-50 px-2 py-1.5 rounded-lg">
+                          <CheckCircle2 className="w-3 h-3" />
+                          <span className="text-xs font-medium">Problema notificado</span>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => {
+                            setStockAlertSent(prev => ({ ...prev, [selectedItem.productSku]: true }));
+                          }}
+                          className="flex items-center gap-1 text-xs font-medium text-yellow-800 bg-yellow-200 hover:bg-yellow-300 px-2 py-1.5 rounded-lg transition-colors"
+                        >
+                          <Bell className="w-3 h-3" />
+                          Notificar problema
+                        </button>
+                      )}
+
+                      {/* Opción 2: Buscar reemplazo */}
                       <button
-                        onClick={() => {
-                          setStockAlertSent(prev => ({ ...prev, [selectedItem.productSku]: true }));
-                        }}
-                        className="flex items-center gap-1 mt-2 text-xs font-medium text-yellow-800 bg-yellow-200 hover:bg-yellow-300 px-2 py-1 rounded-lg transition-colors"
+                        onClick={handleStartReplacement}
+                        className="flex items-center gap-1 text-xs font-medium text-blue-800 bg-blue-100 hover:bg-blue-200 px-2 py-1.5 rounded-lg transition-colors"
                       >
-                        <Bell className="w-3 h-3" />
-                        Notificar a supervisor
+                        <RefreshCw className="w-3 h-3" />
+                        Buscar producto similar
                       </button>
-                    )}
+                    </div>
                   </div>
                 </div>
+              </div>
+            )}
+
+            {/* Modal de Reemplazo inline con selección flexible de cantidades */}
+            {showReplacementModal && replacementInfo && (
+              <div className="bg-blue-50 border border-blue-300 rounded-lg px-3 py-3 mb-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <RefreshCw className="w-4 h-4 text-blue-600" />
+                  <p className="text-sm font-semibold text-blue-800">Combinar con reemplazo</p>
+                </div>
+
+                {replacementInfo.replacement ? (
+                  <>
+                    {/* Info del reemplazo */}
+                    <div className="bg-white rounded-lg p-2 mb-3">
+                      <p className="text-xs text-gray-500">Producto similar:</p>
+                      <p className="text-sm font-semibold text-gray-900">{replacementInfo.replacement.name}</p>
+                      <p className="text-xs text-gray-500 font-mono">{replacementInfo.replacement.sku}</p>
+                      <p className="text-xs text-blue-600 mt-1">
+                        Ubicación: {replacementInfo.replacement.location} • Stock: {replacementInfo.replacementStock}
+                      </p>
+                    </div>
+
+                    {/* Selector de cantidad ORIGINAL */}
+                    <div className="bg-white rounded-lg p-2 mb-2">
+                      <div className="flex items-center justify-between mb-1">
+                        <div>
+                          <p className="text-xs font-semibold text-gray-700">Original</p>
+                          <p className="text-xs text-gray-500">(Stock: {replacementInfo.originalStock})</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => setOriginalQtyToUse(Math.max(0, originalQtyToUse - 1))}
+                            className="w-7 h-7 bg-gray-100 rounded-full flex items-center justify-center active:scale-95"
+                          >
+                            <Minus className="w-3 h-3 text-gray-600" />
+                          </button>
+                          <span className="w-8 text-center text-lg font-bold text-gray-900">{originalQtyToUse}</span>
+                          <button
+                            onClick={() => setOriginalQtyToUse(Math.min(replacementInfo.originalStock, originalQtyToUse + 1))}
+                            className="w-7 h-7 bg-blue-500 rounded-full flex items-center justify-center active:scale-95"
+                          >
+                            <Plus className="w-3 h-3 text-white" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Selector de cantidad REEMPLAZO */}
+                    <div className="bg-white rounded-lg p-2 mb-3">
+                      <div className="flex items-center justify-between mb-1">
+                        <div>
+                          <p className="text-xs font-semibold text-blue-700">Reemplazo</p>
+                          <p className="text-xs text-gray-500">(Stock: {replacementInfo.replacementStock})</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => setReplacementQtyToUse(Math.max(0, replacementQtyToUse - 1))}
+                            className="w-7 h-7 bg-gray-100 rounded-full flex items-center justify-center active:scale-95"
+                          >
+                            <Minus className="w-3 h-3 text-gray-600" />
+                          </button>
+                          <span className="w-8 text-center text-lg font-bold text-blue-600">{replacementQtyToUse}</span>
+                          <button
+                            onClick={() => setReplacementQtyToUse(Math.min(replacementInfo.replacementStock, replacementQtyToUse + 1))}
+                            className="w-7 h-7 bg-blue-500 rounded-full flex items-center justify-center active:scale-95"
+                          >
+                            <Plus className="w-3 h-3 text-white" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Total y validación */}
+                    <div className={`rounded-lg p-2 mb-3 ${
+                      originalQtyToUse + replacementQtyToUse >= replacementInfo.requestedQty
+                        ? 'bg-green-100 border border-green-300'
+                        : 'bg-red-100 border border-red-300'
+                    }`}>
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-medium text-gray-700">Total a despachar:</span>
+                        <span className={`text-lg font-bold ${
+                          originalQtyToUse + replacementQtyToUse >= replacementInfo.requestedQty
+                            ? 'text-green-700'
+                            : 'text-red-700'
+                        }`}>
+                          {originalQtyToUse + replacementQtyToUse} / {replacementInfo.requestedQty}
+                        </span>
+                      </div>
+                      {originalQtyToUse + replacementQtyToUse < replacementInfo.requestedQty && (
+                        <p className="text-xs text-red-600 mt-1">
+                          ⚠️ Faltan {replacementInfo.requestedQty - (originalQtyToUse + replacementQtyToUse)} unidades
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => setShowReplacementModal(false)}
+                        className="flex-1 text-xs font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 px-2 py-1.5 rounded-lg transition-colors"
+                      >
+                        Cancelar
+                      </button>
+                      <button
+                        onClick={() => handleConfirmReplacement(replacementQtyToUse)}
+                        disabled={originalQtyToUse + replacementQtyToUse < replacementInfo.requestedQty}
+                        className={`flex-1 text-xs font-medium px-2 py-1.5 rounded-lg transition-colors ${
+                          originalQtyToUse + replacementQtyToUse >= replacementInfo.requestedQty
+                            ? 'text-white bg-blue-500 hover:bg-blue-600'
+                            : 'text-gray-400 bg-gray-200 cursor-not-allowed'
+                        }`}
+                      >
+                        Confirmar combinación
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="bg-white rounded-lg p-2 mb-2">
+                      <p className="text-xs text-red-600 font-medium">No hay productos similares disponibles</p>
+                      <p className="text-xs text-gray-500">Se despachará con la cantidad disponible.</p>
+                    </div>
+                    <button
+                      onClick={() => setShowReplacementModal(false)}
+                      className="w-full text-xs font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 px-2 py-1.5 rounded-lg transition-colors"
+                    >
+                      Entendido
+                    </button>
+                  </>
+                )}
               </div>
             )}
 
@@ -461,10 +801,10 @@ const PickingProcess: React.FC = () => {
               </Button>
               <Button
                 onClick={handleConfirmQuantity}
-                disabled={quantity <= 0}
+                disabled={quantity < selectedItem.requestedQuantity}
                 className="flex-1"
               >
-                CONFIRMAR
+                {quantity >= selectedItem.requestedQuantity ? 'CONFIRMAR' : `FALTAN ${selectedItem.requestedQuantity - quantity}`}
               </Button>
             </div>
           </div>
