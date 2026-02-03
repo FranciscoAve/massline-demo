@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, Package, ScanBarcode, AlertTriangle, CheckCircle2, Bell, Minus, Plus, X } from 'lucide-react';
 import Stepper from '../components/navigation/Stepper';
@@ -47,7 +47,25 @@ const ProductScanning: React.FC = () => {
   const supplier = orderState?.order?.supplier || orderState?.supplier || '';
 
   // Lista de productos a recibir
-  const [receiptList, setReceiptList] = useState<ReceiptItem[]>([]);
+  // Inicializar lista de recepción con productos esperados si hay orden
+  const getInitialReceiptList = (): ReceiptItem[] => {
+    if (!hasOrder) return [];
+    return mockOrderExpectedProducts.map((item) => {
+      const product = mockProducts.find(p => p.sku === item.sku);
+      return {
+        id: product?.id || item.sku,
+        sku: item.sku,
+        name: item.name,
+        image: product?.thumbnailImage || 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100',
+        category: product?.category.name || 'Repuestos',
+        location: item.location,
+        expectedQuantity: item.expectedQty,
+        confirmedQuantity: 0,
+      };
+    });
+  };
+
+  const [receiptList, setReceiptList] = useState<ReceiptItem[]>(getInitialReceiptList);
   const [showScanner, setShowScanner] = useState(false);
 
   // Estado para modal de confirmación de cantidad
@@ -59,29 +77,10 @@ const ProductScanning: React.FC = () => {
   const [problemNotified, setProblemNotified] = useState<Record<string, boolean>>({});
   const [showProblemModal, setShowProblemModal] = useState(false);
   const [problemItemSku, setProblemItemSku] = useState<string | null>(null);
+  const [simulatedSku, setSimulatedSku] = useState<string>('');
 
   // Índice para simulación secuencial de escaneo (guarda el índice del último producto procesado)
   const lastProcessedIndexRef = useRef(-1);
-
-  // Precargar productos si hay orden de compra
-  useEffect(() => {
-    if (hasOrder && receiptList.length === 0) {
-      const initialList: ReceiptItem[] = mockOrderExpectedProducts.map((item) => {
-        const product = mockProducts.find(p => p.sku === item.sku);
-        return {
-          id: product?.id || item.sku,
-          sku: item.sku,
-          name: item.name,
-          image: product?.thumbnailImage || 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100',
-          category: product?.category.name || 'Repuestos',
-          location: item.location,
-          expectedQuantity: item.expectedQty,
-          confirmedQuantity: 0,
-        };
-      });
-      setReceiptList(initialList);
-    }
-  }, [hasOrder, receiptList.length]);
 
   // Manejar escaneo de código de barras de producto
   const handleProductBarcodeScan = (barcode: string) => {
@@ -151,24 +150,33 @@ const ProductScanning: React.FC = () => {
   };
 
   // Para simulación: obtener el siguiente SKU a escanear (secuencial)
-  const getNextSimulatedSku = (): string => {
+  // Esta función se llama desde un event handler, no durante render
+  const openScannerWithSimulatedSku = () => {
     // Buscar el siguiente producto después del último procesado que no tenga cantidad confirmada
-    // o que tenga cantidad pero no esté completo (para permitir agregar más)
+    let nextSku = '';
     for (let i = lastProcessedIndexRef.current + 1; i < receiptList.length; i++) {
       const item = receiptList[i];
       if (item.confirmedQuantity === 0) {
-        return item.sku;
+        nextSku = item.sku;
+        break;
       }
     }
     // Si no hay más productos sin confirmar, buscar desde el inicio
-    for (let i = 0; i < receiptList.length; i++) {
-      const item = receiptList[i];
-      if (item.confirmedQuantity === 0) {
-        return item.sku;
+    if (!nextSku) {
+      for (let i = 0; i < receiptList.length; i++) {
+        const item = receiptList[i];
+        if (item.confirmedQuantity === 0) {
+          nextSku = item.sku;
+          break;
+        }
       }
     }
     // Si todos tienen algo confirmado, devolver el primero
-    return receiptList[0]?.sku || mockOrderExpectedProducts[0]?.sku || 'REP-12345';
+    if (!nextSku) {
+      nextSku = receiptList[0]?.sku || mockOrderExpectedProducts[0]?.sku || 'RE-R250-H10313';
+    }
+    setSimulatedSku(nextSku);
+    setShowScanner(true);
   };
 
   // Notificar problema desde la tabla
@@ -253,7 +261,7 @@ const ProductScanning: React.FC = () => {
               </div>
             </div>
             <button
-              onClick={() => setShowScanner(true)}
+              onClick={openScannerWithSimulatedSku}
               className="w-full py-4 bg-blue-500 rounded-xl flex items-center justify-center gap-3 active:scale-[0.98] transition-transform"
             >
               <ScanBarcode className="w-6 h-6 text-white" />
@@ -447,7 +455,7 @@ const ProductScanning: React.FC = () => {
           title="Escanear Producto"
           subtitle="Escanea el código de barras del producto"
           expectedType="product"
-          simulateValue={getNextSimulatedSku()}
+          simulateValue={simulatedSku}
         />
       )}
 
