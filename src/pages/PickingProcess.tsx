@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, MapPin, ScanBarcode, Minus, Plus, CheckCircle2, Package, X, AlertTriangle, Bell, RefreshCw } from 'lucide-react';
 import { QRScannerWrapper } from '../components/scanner/QRScannerWrapper';
@@ -96,10 +96,14 @@ const PickingProcess: React.FC = () => {
   const [stockAlertSent, setStockAlertSent] = useState<Record<string, boolean>>({});
 
   // Estado para escaneo
-  const [scanningItemIndex, setScanningItemIndex] = useState<number | null>(null);
+  const [showScanner, setShowScanner] = useState(false);
   const [showQuantityModal, setShowQuantityModal] = useState(false);
   const [selectedItemIndex, setSelectedItemIndex] = useState<number | null>(null);
   const [quantity, setQuantity] = useState(0);
+  const [simulatedLocation, setSimulatedLocation] = useState<string>('');
+
+  // Índice para simulación secuencial de escaneo
+  const lastProcessedIndexRef = useRef(-1);
 
   // Estado para reemplazos y notificaciones
   const [showReplacementModal, setShowReplacementModal] = useState(false);
@@ -141,31 +145,68 @@ const PickingProcess: React.FC = () => {
     return product?.availableQuantity ?? 0;
   };
 
-  // Iniciar escaneo de estantería para un item
-  const handleStartScan = (index: number) => {
-    setScanningItemIndex(index);
+  // Abrir escáner general con ubicación simulada secuencial
+  const openScannerWithSimulatedLocation = () => {
+    // Buscar el siguiente producto pendiente después del último procesado
+    let nextLocation = '';
+
+    for (let i = lastProcessedIndexRef.current + 1; i < sortedItems.length; i++) {
+      const item = sortedItems[i];
+      if (item.status !== 'picked') {
+        nextLocation = item.locationCode;
+        break;
+      }
+    }
+
+    // Si no hay más productos pendientes después, buscar desde el inicio
+    if (!nextLocation) {
+      for (let i = 0; i < sortedItems.length; i++) {
+        const item = sortedItems[i];
+        if (item.status !== 'picked') {
+          nextLocation = item.locationCode;
+          break;
+        }
+      }
+    }
+
+    // Si todos están completados, usar el primero
+    if (!nextLocation) {
+      nextLocation = sortedItems[0]?.locationCode || 'UBICACION';
+    }
+
+    setSimulatedLocation(nextLocation);
+    setShowScanner(true);
   };
 
   // Procesar resultado del escaneo
   const handleScanResult = (qrCode: string) => {
-    if (scanningItemIndex === null) return;
-
-    const item = sortedItems[scanningItemIndex];
     let locationCode = qrCode;
     if (qrCode.startsWith('SS:L:')) {
       locationCode = qrCode.substring(5);
     }
 
-    // Verificar que la ubicación escaneada coincide con la esperada
-    if (locationCode !== item.locationCode) {
-      alert(`Ubicación incorrecta.\nEscaneó: ${locationCode}\nEsperada: ${item.locationCode}`);
-      setScanningItemIndex(null);
+    // Buscar el producto que corresponde a esta ubicación (que no esté completado)
+    const itemIndex = sortedItems.findIndex(
+      item => item.locationCode === locationCode && item.status !== 'picked'
+    );
+
+    if (itemIndex === -1) {
+      // Verificar si la ubicación existe pero el producto ya está completado
+      const completedItem = sortedItems.find(item => item.locationCode === locationCode);
+      if (completedItem) {
+        alert(`El producto en ${locationCode} ya fue recolectado.`);
+      } else {
+        alert(`No hay productos pendientes en la ubicación: ${locationCode}`);
+      }
+      setShowScanner(false);
       return;
     }
 
-    // Abrir modal de cantidad
-    setScanningItemIndex(null);
-    setSelectedItemIndex(scanningItemIndex);
+    const item = sortedItems[itemIndex];
+
+    // Cerrar escáner y abrir modal de cantidad
+    setShowScanner(false);
+    setSelectedItemIndex(itemIndex);
     const availableStock = getAvailableStock(item);
     setQuantity(Math.min(item.requestedQuantity, availableStock));
     setShowQuantityModal(true);
@@ -203,6 +244,9 @@ const PickingProcess: React.FC = () => {
       setShelfInventory(updatedInventory);
     }
 
+    // Guardar índice del último procesado para el flujo secuencial
+    lastProcessedIndexRef.current = selectedItemIndex;
+
     // Cerrar modal
     setShowQuantityModal(false);
     setSelectedItemIndex(null);
@@ -214,7 +258,7 @@ const PickingProcess: React.FC = () => {
     setShowReplacementModal(false);
     setSelectedItemIndex(null);
     setQuantity(0);
-    setScanningItemIndex(null);
+    setShowScanner(false);
     setReplacementInfo(null);
   };
 
@@ -375,21 +419,44 @@ const PickingProcess: React.FC = () => {
 
       {/* Lista de productos ordenada por ubicación */}
       <div className="flex-1 p-4 pb-28 overflow-y-auto">
+        {/* Botón de escaneo general */}
+        {sortedItems.length > 0 && !allCompleted && (
+          <div className="bg-white rounded-xl shadow-sm p-3 mb-4">
+            <div className="flex items-center justify-between mb-2">
+              <div>
+                <h3 className="text-sm font-semibold text-gray-900">Escanear Estantería</h3>
+                <p className="text-xs text-gray-500">Escanea la ubicación del siguiente producto</p>
+              </div>
+              <div className="text-right">
+                <p className="text-lg font-bold text-blue-600">{completedItems}/{items.length}</p>
+                <p className="text-xs text-gray-500">productos</p>
+              </div>
+            </div>
+            <button
+              onClick={openScannerWithSimulatedLocation}
+              className="w-full py-3 bg-blue-500 rounded-xl flex items-center justify-center gap-2 active:scale-[0.98] transition-transform"
+            >
+              <ScanBarcode className="w-5 h-5 text-white" />
+              <span className="text-white font-bold">ESCANEAR UBICACIÓN</span>
+            </button>
+          </div>
+        )}
+
         {/* Contenedor con scroll horizontal para móvil */}
         <div className="overflow-x-auto -mx-4 px-4">
-          <div className="min-w-[650px]">
+          <div className="min-w-[600px]">
             {/* Encabezado de tabla */}
             <div className="bg-gray-100 rounded-t-xl px-4 py-3 grid grid-cols-12 gap-4 text-xs font-semibold text-gray-600">
               <div className="col-span-2">Ubicación</div>
               <div className="col-span-3">Código</div>
-              <div className="col-span-3">Producto</div>
+              <div className="col-span-4">Producto</div>
               <div className="col-span-1 text-center">Ped.</div>
               <div className="col-span-1 text-center">Conf.</div>
-              <div className="col-span-2 text-center">Acción</div>
+              <div className="col-span-1 text-center"></div>
             </div>
 
             <div className="bg-white rounded-b-xl shadow-sm overflow-hidden">
-          {sortedItems.map((item, index) => {
+          {sortedItems.map((item) => {
             const availableStock = getAvailableStock(item);
             const isPicked = item.status === 'picked';
             const hasStockIssue = availableStock < item.requestedQuantity;
@@ -398,7 +465,7 @@ const PickingProcess: React.FC = () => {
             return (
               <div
                 key={`${item.productSku}-${item.locationCode}`}
-                className={`grid grid-cols-12 gap-3 px-4 py-4 border-b border-gray-100 last:border-none items-center ${
+                className={`grid grid-cols-12 gap-3 px-4 py-3 border-b border-gray-100 last:border-none items-center ${
                   isPicked ? (hasReplacement ? 'bg-blue-50' : 'bg-green-50') : hasStockIssue ? 'bg-yellow-50' : ''
                 }`}
               >
@@ -416,7 +483,7 @@ const PickingProcess: React.FC = () => {
                 </div>
 
                 {/* Nombre del Producto */}
-                <div className="col-span-3">
+                <div className="col-span-4">
                   <p className="text-xs font-medium text-gray-900 line-clamp-2 leading-tight">{item.productName}</p>
                   {hasStockIssue && !isPicked && (
                     <div className="flex items-center gap-1 text-xs text-yellow-700 mt-1">
@@ -444,20 +511,10 @@ const PickingProcess: React.FC = () => {
                   </span>
                 </div>
 
-                {/* Acción */}
-                <div className="col-span-2 flex justify-center">
-                  {!isPicked ? (
-                    <button
-                      onClick={() => handleStartScan(index)}
-                      className="w-11 h-11 bg-blue-500 rounded-xl flex items-center justify-center active:scale-95 transition-transform"
-                      title="Escanear estantería"
-                    >
-                      <ScanBarcode className="w-6 h-6 text-white" />
-                    </button>
-                  ) : (
-                    <div className="w-11 h-11 bg-green-100 rounded-xl flex items-center justify-center">
-                      <CheckCircle2 className="w-6 h-6 text-green-500" />
-                    </div>
+                {/* Estado */}
+                <div className="col-span-1 flex justify-center">
+                  {isPicked && (
+                    <CheckCircle2 className="w-5 h-5 text-green-500" />
                   )}
                 </div>
               </div>
@@ -511,14 +568,14 @@ const PickingProcess: React.FC = () => {
       </div>
 
       {/* QR Scanner Modal */}
-      {scanningItemIndex !== null && (
+      {showScanner && (
         <QRScannerWrapper
           onScan={handleScanResult}
           onClose={handleCancelModal}
           title="Escanear Estantería"
-          subtitle={`Buscar: ${sortedItems[scanningItemIndex]?.locationCode}`}
+          subtitle={`Siguiente: ${simulatedLocation}`}
           expectedType="location"
-          simulateValue={sortedItems[scanningItemIndex]?.locationCode}
+          simulateValue={simulatedLocation}
         />
       )}
 

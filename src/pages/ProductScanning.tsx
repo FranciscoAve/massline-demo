@@ -4,7 +4,7 @@ import { ArrowLeft, Package, ScanBarcode, AlertTriangle, CheckCircle2, Bell, Min
 import Stepper from '../components/navigation/Stepper';
 import Button from '../components/ui/Button';
 import { QRScannerWrapper } from '../components/scanner/QRScannerWrapper';
-import { mockProducts } from '../data/mockData';
+import type { Order } from '../types';
 
 interface ReceiptItem {
   id: string;
@@ -17,19 +17,6 @@ interface ReceiptItem {
   confirmedQuantity: number;
 }
 
-// Mock de productos esperados en una orden de compra
-// Formato ubicación: Fila-Columna-Nivel (ej: 05-B-00)
-// Formato código: RE-R[serie]-[código]
-const mockOrderExpectedProducts = [
-  { sku: 'RE-R250-H10313', name: 'Direccional Delantera LH', expectedQty: 9, location: '05-B-00' },
-  { sku: 'RE-R250-I10312', name: 'Direccional Delantera RH', expectedQty: 9, location: '05-B-08' },
-  { sku: 'RE-R250-I10504', name: 'Comando Derecho Chief 4V Ninja 2.5/3.0', expectedQty: 4, location: '08-D-01' },
-  { sku: 'RE-R250-I0709', name: 'Estribo de Conductor C/Pedales Izq./Der.', expectedQty: 8, location: '11-F-04' },
-  { sku: 'RE-RNJ-250302', name: 'Cañería del Enfriador de Aceite Set 2pcs', expectedQty: 7, location: '17-E-01' },
-  { sku: 'RE-RNJ-110237', name: 'Piñón de Velocímetro Chief II', expectedQty: 2, location: '18-C-06' },
-  { sku: 'RE-R200-142125', name: 'Asiento Delantero & Posterior Set Chief II', expectedQty: 5, location: '23-A-01' },
-];
-
 const ProductScanning: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -38,29 +25,30 @@ const ProductScanning: React.FC = () => {
     supplier?: string;
     hasOrder?: boolean;
     reason?: string;
-    order?: { orderNumber: string; supplier: string }
+    order?: Order;
   } | null;
 
-  // Extraer datos de orden que vienen de ReceptionStart
-  const hasOrder = orderState?.hasOrder === true || !!orderState?.order;
-  const orderNumber = orderState?.order?.orderNumber || orderState?.orderNumber || '';
-  const supplier = orderState?.order?.supplier || orderState?.supplier || '';
+  // Extraer datos de orden que vienen de ReceptionStart o ReceptionList
+  const order = orderState?.order;
+  const hasOrder = orderState?.hasOrder === true || !!order;
+  const orderNumber = order?.orderNumber || orderState?.orderNumber || '';
+  const supplier = order?.supplier || orderState?.supplier || '';
 
   // Lista de productos a recibir
-  // Inicializar lista de recepción con productos esperados si hay orden
+  // Inicializar lista de recepción con productos de la orden real
   const getInitialReceiptList = (): ReceiptItem[] => {
-    if (!hasOrder) return [];
-    return mockOrderExpectedProducts.map((item) => {
-      const product = mockProducts.find(p => p.sku === item.sku);
+    if (!hasOrder || !order?.products) return [];
+    return order.products.map((orderProduct) => {
+      const product = orderProduct.product;
       return {
-        id: product?.id || item.sku,
-        sku: item.sku,
-        name: item.name,
-        image: product?.thumbnailImage || 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100',
-        category: product?.category.name || 'Repuestos',
-        location: item.location,
-        expectedQuantity: item.expectedQty,
-        confirmedQuantity: 0,
+        id: product.id,
+        sku: product.sku,
+        name: product.name,
+        image: product.image || 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100',
+        category: product.category || 'Repuestos',
+        location: product.location || '',
+        expectedQuantity: orderProduct.quantity,
+        confirmedQuantity: orderProduct.received || 0,
       };
     });
   };
@@ -173,7 +161,7 @@ const ProductScanning: React.FC = () => {
     }
     // Si todos tienen algo confirmado, devolver el primero
     if (!nextSku) {
-      nextSku = receiptList[0]?.sku || mockOrderExpectedProducts[0]?.sku || 'RE-R250-H10313';
+      nextSku = receiptList[0]?.sku || 'PRODUCTO';
     }
     setSimulatedSku(nextSku);
     setShowScanner(true);
@@ -248,12 +236,12 @@ const ProductScanning: React.FC = () => {
       {/* Content */}
       <div className="flex-1 p-4 pb-44 overflow-y-auto">
         {/* Botón de escaneo general */}
-        {receiptList.length > 0 && (
-          <div className="bg-white rounded-xl shadow-sm p-4 mb-4">
-            <div className="flex items-center justify-between mb-3">
+        {receiptList.length > 0 && !allComplete && (
+          <div className="bg-white rounded-xl shadow-sm p-3 mb-4">
+            <div className="flex items-center justify-between mb-2">
               <div>
                 <h3 className="text-sm font-semibold text-gray-900">Escanear Productos</h3>
-                <p className="text-xs text-gray-500">Escanea el código de barras de cada producto recibido</p>
+                <p className="text-xs text-gray-500">Escanea el código de barras del producto</p>
               </div>
               <div className="text-right">
                 <p className="text-lg font-bold text-blue-600">{totalUnits}/{totalExpected}</p>
@@ -262,10 +250,10 @@ const ProductScanning: React.FC = () => {
             </div>
             <button
               onClick={openScannerWithSimulatedSku}
-              className="w-full py-4 bg-blue-500 rounded-xl flex items-center justify-center gap-3 active:scale-[0.98] transition-transform"
+              className="w-full py-3 bg-blue-500 rounded-xl flex items-center justify-center gap-2 active:scale-[0.98] transition-transform"
             >
-              <ScanBarcode className="w-6 h-6 text-white" />
-              <span className="text-white font-bold text-lg">ESCANEAR PRODUCTO</span>
+              <ScanBarcode className="w-5 h-5 text-white" />
+              <span className="text-white font-bold">ESCANEAR PRODUCTO</span>
             </button>
           </div>
         )}

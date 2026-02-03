@@ -7,6 +7,7 @@ import type {
   Order,
   DashboardStats,
 } from '../types';
+import { mockReceptionOrders } from '../data/mockData';
 
 // Mock delay to simulate network request
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -188,22 +189,35 @@ export const mockApi = {
   orders: {
     getByNumber: async (orderNumber: string): Promise<Order | null> => {
       await delay(500);
-      // Mock order
-      if (orderNumber === 'OC-2025-001234') {
+
+      // Buscar en órdenes de recepción
+      const receptionOrder = mockReceptionOrders.find(o => o.orderNumber === orderNumber);
+      if (receptionOrder) {
         return {
-          id: 'ORD001',
-          orderNumber: 'OC-2025-001234',
-          type: 'purchase',
-          status: 'pending',
-          supplier: 'AutoParts Supply Co.',
-          products: mockProducts.map((p) => ({
-            product: p,
-            quantity: 10,
-            received: 0,
+          id: receptionOrder.id,
+          orderNumber: receptionOrder.orderNumber,
+          type: receptionOrder.type,
+          status: receptionOrder.status,
+          supplier: receptionOrder.supplier.name,
+          products: receptionOrder.items.map((item) => ({
+            product: {
+              id: item.productId,
+              sku: item.productSku,
+              name: item.productName,
+              description: '',
+              category: 'General',
+              quantity: item.expectedQuantity,
+              location: item.locationCode,
+              price: 0,
+              image: item.productImage,
+            },
+            quantity: item.expectedQuantity,
+            received: item.receivedQuantity,
           })),
-          createdAt: new Date(),
+          createdAt: new Date(receptionOrder.createdAt),
         };
       }
+
       return null;
     },
   },

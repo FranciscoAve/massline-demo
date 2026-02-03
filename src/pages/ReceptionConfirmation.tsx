@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { CheckCircle2, ChevronDown, Mail, Printer, AlertTriangle, Bell } from 'lucide-react';
+import { CheckCircle2, ChevronDown, Mail, Printer, AlertTriangle, Bell, Share2, X, MessageCircle } from 'lucide-react';
 import Stepper from '../components/navigation/Stepper';
 import Button from '../components/ui/Button';
 
@@ -26,6 +26,7 @@ const ReceptionConfirmation: React.FC = () => {
   const [showProductsTable, setShowProductsTable] = useState(true);
   const [emailSent, setEmailSent] = useState(false);
   const [printStarted, setPrintStarted] = useState(false);
+  const [showShareOptions, setShowShareOptions] = useState(false);
 
   const confirmedProducts = locationState?.products || [];
   const totalProducts = confirmedProducts.length;
@@ -53,12 +54,23 @@ const ReceptionConfirmation: React.FC = () => {
     totalExpected,
   };
 
-  // Simular envío de correo
-  const handleSendEmail = () => {
+  // Opciones de compartir
+  const shareOptions = [
+    { id: 'whatsapp', name: 'WhatsApp', icon: MessageCircle, color: 'bg-green-500', textColor: 'text-green-600' },
+    { id: 'gmail', name: 'Gmail', icon: Mail, color: 'bg-red-500', textColor: 'text-red-600' },
+    { id: 'outlook', name: 'Outlook', icon: Mail, color: 'bg-blue-500', textColor: 'text-blue-600' },
+    { id: 'other', name: 'Otro', icon: Share2, color: 'bg-gray-500', textColor: 'text-gray-600' },
+  ];
+
+  // Manejar selección de opción de compartir
+  const handleShareOption = (optionId: string) => {
+    setShowShareOptions(false);
     setEmailSent(true);
-    // Simular envío
+
+    const optionName = shareOptions.find(o => o.id === optionId)?.name || optionId;
+
     setTimeout(() => {
-      alert(`Resumen enviado por correo.\n\nOrden: ${receptionData.orderNumber}\nProductos: ${totalProducts}\nUnidades: ${totalUnits}${hasDiscrepancies ? `\n\nALERTA: ${productsWithDiscrepancy.length} productos con cantidad incompleta` : ''}`);
+      alert(`Resumen enviado por ${optionName}.\n\nOrden: ${receptionData.orderNumber}\nProductos: ${totalProducts}\nUnidades: ${totalUnits}${hasDiscrepancies ? `\n\nALERTA: ${productsWithDiscrepancy.length} productos con cantidad incompleta` : ''}`);
     }, 500);
   };
 
@@ -241,7 +253,7 @@ const ReceptionConfirmation: React.FC = () => {
         {/* Actions */}
         <div className="flex gap-3 mb-4">
           <button
-            onClick={handleSendEmail}
+            onClick={() => !emailSent && setShowShareOptions(true)}
             disabled={emailSent}
             className={`flex-1 py-3 border rounded-xl flex items-center justify-center gap-2 font-medium active:scale-95 transition-transform ${
               emailSent
@@ -256,7 +268,7 @@ const ReceptionConfirmation: React.FC = () => {
               </>
             ) : (
               <>
-                <Mail className="w-5 h-5" />
+                <Share2 className="w-5 h-5" />
                 <span>Enviar</span>
               </>
             )}
@@ -274,6 +286,52 @@ const ReceptionConfirmation: React.FC = () => {
           </button>
         </div>
       </div>
+
+      {/* Modal de opciones de compartir */}
+      {showShareOptions && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-end justify-center">
+          <div className="bg-white w-full max-w-md rounded-t-2xl p-4 animate-slide-up">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold text-gray-900">Compartir resumen</h3>
+              <button
+                onClick={() => setShowShareOptions(false)}
+                className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center"
+              >
+                <X className="w-5 h-5 text-gray-600" />
+              </button>
+            </div>
+
+            <p className="text-sm text-gray-500 mb-4">
+              Selecciona cómo deseas enviar el resumen de la recepción
+            </p>
+
+            <div className="grid grid-cols-4 gap-3 mb-4">
+              {shareOptions.map((option) => {
+                const Icon = option.icon;
+                return (
+                  <button
+                    key={option.id}
+                    onClick={() => handleShareOption(option.id)}
+                    className="flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-gray-50 active:scale-95 transition-transform"
+                  >
+                    <div className={`w-12 h-12 ${option.color} rounded-full flex items-center justify-center`}>
+                      <Icon className="w-6 h-6 text-white" />
+                    </div>
+                    <span className="text-xs font-medium text-gray-700">{option.name}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            <button
+              onClick={() => setShowShareOptions(false)}
+              className="w-full py-3 border border-gray-300 rounded-xl text-gray-700 font-medium"
+            >
+              Cancelar
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Footer */}
       <div className="bg-white border-t border-gray-200 p-4 fixed bottom-0 left-0 right-0">

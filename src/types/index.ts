@@ -53,7 +53,7 @@ export interface Product {
 export interface Order {
   id: string;
   orderNumber: string;
-  type: 'purchase' | 'sale' | 'transfer';
+  type: 'purchase' | 'sale' | 'transfer' | 'return';
   status: 'pending' | 'in_progress' | 'completed' | 'cancelled';
   products: OrderProduct[];
   supplier?: string;
