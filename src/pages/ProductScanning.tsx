@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { ArrowLeft, Package, ScanBarcode, AlertTriangle, CheckCircle2, Bell, Minus, Plus, X } from 'lucide-react';
+import { ArrowLeft, Package, ScanBarcode, AlertTriangle, CheckCircle2, Bell, Minus, Plus, X, MapPin } from 'lucide-react';
 import Stepper from '../components/navigation/Stepper';
 import Button from '../components/ui/Button';
 import { QRScannerWrapper } from '../components/scanner/QRScannerWrapper';
@@ -278,12 +278,15 @@ const ProductScanning: React.FC = () => {
         {receiptList.length > 0 ? (
           <>
           <div className="overflow-x-auto rounded-xl shadow-sm -mx-4 px-4">
-            <div className="min-w-[650px]">
+            <div className="min-w-[500px]">
               {/* Encabezado de tabla */}
-              <div className="bg-gray-100 rounded-t-xl px-4 py-3 grid grid-cols-12 gap-4 text-xs font-semibold text-gray-600">
-                <div className="col-span-2">Ubicación</div>
-                <div className="col-span-3">Código</div>
-                <div className="col-span-3">Producto</div>
+              <div className="bg-gray-100 rounded-t-xl px-4 py-3 grid grid-cols-12 gap-3 text-xs font-semibold text-gray-600">
+                <div className="col-span-3">
+                  <span>Código</span>
+                  <span className="text-blue-500 ml-1">/</span>
+                  <span className="text-blue-500"> Ubic.</span>
+                </div>
+                <div className="col-span-5">Producto</div>
                 <div className="col-span-1 text-center">Ped.</div>
                 <div className="col-span-1 text-center">Conf.</div>
                 <div className="col-span-2 text-center"></div>
@@ -298,23 +301,22 @@ const ProductScanning: React.FC = () => {
                 return (
                   <div
                     key={item.sku}
-                    className={`grid grid-cols-12 gap-3 px-4 py-4 border-b border-gray-100 last:border-none items-center ${
+                    className={`grid grid-cols-12 gap-3 px-4 py-3 border-b border-gray-100 last:border-none items-center ${
                       isComplete ? 'bg-green-50' : hasDiscrepancy ? 'bg-yellow-50' : ''
                     }`}
                   >
-                    {/* Ubicación */}
-                    <div className="col-span-2">
-                      <span className="text-sm font-bold font-mono text-blue-600">{item.location}</span>
-                    </div>
-
-                    {/* Código */}
+                    {/* Código / Ubicación */}
                     <div className="col-span-3">
-                      <span className="text-xs font-mono text-gray-600 break-all leading-tight">{item.sku}</span>
+                      <p className="text-xs font-mono text-gray-700 break-all leading-tight">{item.sku}</p>
+                      <div className="flex items-center gap-1 mt-1">
+                        <MapPin className={`w-3 h-3 flex-shrink-0 ${isComplete ? 'text-green-600' : 'text-blue-500'}`} />
+                        <span className="text-xs font-bold font-mono text-blue-600">{item.location}</span>
+                      </div>
                     </div>
 
                     {/* Nombre del Producto */}
-                    <div className="col-span-3">
-                      <p className="text-xs font-medium text-gray-900 line-clamp-2 leading-tight">{item.name}</p>
+                    <div className="col-span-5">
+                      <p className="text-sm font-medium text-gray-900 line-clamp-2 leading-tight">{item.name}</p>
                     </div>
 
                     {/* Cantidad Pedida */}
