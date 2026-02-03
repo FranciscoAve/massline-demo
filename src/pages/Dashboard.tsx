@@ -69,7 +69,7 @@ const Dashboard: React.FC = () => {
       icon: PackageOpen,
       color: 'text-primary',
       bgColor: 'bg-primary/10',
-      route: '/reception/start',
+      route: '/reception/list',
     },
     {
       id: 'dispatch',

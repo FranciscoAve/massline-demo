@@ -46,6 +46,37 @@ export interface PickingItem {
   status: 'pending' | 'current' | 'picked' | 'partial' | 'not_found';
 }
 
+// Reception Order interfaces
+export interface ReceptionItem {
+  productId: string;
+  productSku: string;
+  productName: string;
+  productImage: string;
+  expectedQuantity: number;
+  receivedQuantity: number;
+  locationCode: string;
+  status: 'pending' | 'received' | 'partial' | 'not_found';
+  hasDiscrepancy?: boolean;
+  problemNotified?: boolean;
+}
+
+export interface ReceptionOrder {
+  id: string;
+  orderNumber: string;
+  type: 'purchase' | 'return' | 'transfer';
+  priority: 'urgent' | 'high' | 'normal' | 'low';
+  status: 'pending' | 'in_progress' | 'completed';
+  releaseStatus: 'released' | 'unreleased';
+  supplier: {
+    name: string;
+    contact?: string;
+  };
+  items: ReceptionItem[];
+  createdAt: string;
+  completedAt?: string;
+  receivedBy?: string;
+}
+
 export interface PickingOrder {
   id: string;
   orderNumber: string;
@@ -409,7 +440,7 @@ export const mockOrders: PickingOrder[] = [
     status: 'pending',
     releaseStatus: 'internal',
     destination: {
-      name: 'Taller de Ensamblaje - Línea 1',
+      name: 'Taller de Ensamblaje - Thomas Lombeida',
     },
     items: [
       {
@@ -512,7 +543,7 @@ export const mockOrders: PickingOrder[] = [
     status: 'pending',
     releaseStatus: 'internal',
     destination: {
-      name: 'Taller de Ensamblaje - Línea 2',
+      name: 'Taller de Ensamblaje - María Fernanda Ruiz',
     },
     items: [
       {
@@ -549,7 +580,7 @@ export const mockOrders: PickingOrder[] = [
     status: 'pending',
     releaseStatus: 'internal',
     destination: {
-      name: 'Taller de Ensamblaje - Línea 3',
+      name: 'Taller de Ensamblaje - Carlos Mendoza',
     },
     items: [
       {
@@ -605,5 +636,218 @@ export const mockOrders: PickingOrder[] = [
     ],
     createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(), // Hace 5 días
     dueAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+];
+
+// Mock Reception Orders
+export const mockReceptionOrders: ReceptionOrder[] = [
+  // Recepciones Liberadas (completadas)
+  {
+    id: 'r1',
+    orderNumber: 'OC-2025-001230',
+    type: 'purchase',
+    priority: 'normal',
+    status: 'completed',
+    releaseStatus: 'released',
+    supplier: {
+      name: 'AutoParts Supply Co.',
+      contact: 'ventas@autoparts.com',
+    },
+    items: [
+      {
+        productId: '1',
+        productSku: 'RE-R250-H10313',
+        productName: 'Direccional Delantera LH',
+        productImage: 'https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?w=100',
+        expectedQuantity: 25,
+        receivedQuantity: 25,
+        locationCode: '05-B-00',
+        status: 'received',
+      },
+      {
+        productId: '2',
+        productSku: 'RE-R250-I10312',
+        productName: 'Direccional Delantera RH',
+        productImage: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100',
+        expectedQuantity: 25,
+        receivedQuantity: 25,
+        locationCode: '05-B-08',
+        status: 'received',
+      },
+    ],
+    createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+    completedAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
+    receivedBy: 'Juan Pérez',
+  },
+  {
+    id: 'r2',
+    orderNumber: 'OC-2025-001228',
+    type: 'purchase',
+    priority: 'high',
+    status: 'completed',
+    releaseStatus: 'released',
+    supplier: {
+      name: 'Mega Repuestos S.A.',
+      contact: 'pedidos@megarepuestos.ec',
+    },
+    items: [
+      {
+        productId: '9',
+        productSku: 'RE-RNJ-330501',
+        productName: 'Batería 12V 7Ah',
+        productImage: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100',
+        expectedQuantity: 20,
+        receivedQuantity: 18,
+        locationCode: '23-A-01',
+        status: 'partial',
+        hasDiscrepancy: true,
+        problemNotified: true,
+      },
+      {
+        productId: '10',
+        productSku: 'RE-R250-L40820',
+        productName: 'Aceite Motor 10W-40 Sintético',
+        productImage: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100',
+        expectedQuantity: 50,
+        receivedQuantity: 50,
+        locationCode: '14-C-02',
+        status: 'received',
+      },
+    ],
+    createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+    completedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+    receivedBy: 'María García',
+  },
+  {
+    id: 'r3',
+    orderNumber: 'OC-2025-001225',
+    type: 'return',
+    priority: 'low',
+    status: 'completed',
+    releaseStatus: 'released',
+    supplier: {
+      name: 'Tienda Centro - Local 5',
+      contact: 'devolucion@tiendacentro.com',
+    },
+    items: [
+      {
+        productId: '8',
+        productSku: 'RE-R250-K20415',
+        productName: 'Disco de Freno Ventilado',
+        productImage: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100',
+        expectedQuantity: 3,
+        receivedQuantity: 3,
+        locationCode: '12-B-03',
+        status: 'received',
+      },
+    ],
+    createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+    completedAt: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString(),
+    receivedBy: 'Carlos López',
+  },
+  // Recepciones No Liberadas (pendientes)
+  {
+    id: 'r4',
+    orderNumber: 'OC-2025-001234',
+    type: 'purchase',
+    priority: 'urgent',
+    status: 'pending',
+    releaseStatus: 'unreleased',
+    supplier: {
+      name: 'AutoParts Supply Co.',
+      contact: 'ventas@autoparts.com',
+    },
+    items: [
+      {
+        productId: '3',
+        productSku: 'RE-R250-I10504',
+        productName: 'Comando Derecho Chief 4V Ninja 2.5/3.0',
+        productImage: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100',
+        expectedQuantity: 15,
+        receivedQuantity: 0,
+        locationCode: '08-D-01',
+        status: 'pending',
+      },
+      {
+        productId: '4',
+        productSku: 'RE-R250-I0709',
+        productName: 'Estribo de Conductor C/Pedales Izq./Der.',
+        productImage: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100',
+        expectedQuantity: 10,
+        receivedQuantity: 0,
+        locationCode: '11-F-04',
+        status: 'pending',
+      },
+      {
+        productId: '5',
+        productSku: 'RE-RNJ-250302',
+        productName: 'Cañería del Enfriador de Aceite Set 2pcs',
+        productImage: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100',
+        expectedQuantity: 8,
+        receivedQuantity: 0,
+        locationCode: '17-E-01',
+        status: 'pending',
+      },
+    ],
+    createdAt: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    id: 'r5',
+    orderNumber: 'OC-2025-001235',
+    type: 'purchase',
+    priority: 'high',
+    status: 'pending',
+    releaseStatus: 'unreleased',
+    supplier: {
+      name: 'Distribuidora Nacional',
+      contact: 'compras@distnacional.ec',
+    },
+    items: [
+      {
+        productId: '6',
+        productSku: 'RE-RNJ-110237',
+        productName: 'Piñón de Velocímetro Chief II',
+        productImage: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100',
+        expectedQuantity: 12,
+        receivedQuantity: 0,
+        locationCode: '18-C-06',
+        status: 'pending',
+      },
+      {
+        productId: '7',
+        productSku: 'RE-R200-142125',
+        productName: 'Asiento Delantero & Posterior Set Chief II',
+        productImage: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100',
+        expectedQuantity: 5,
+        receivedQuantity: 0,
+        locationCode: '23-A-02',
+        status: 'pending',
+      },
+    ],
+    createdAt: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
+  },
+  {
+    id: 'r6',
+    orderNumber: 'OC-2025-001236',
+    type: 'transfer',
+    priority: 'normal',
+    status: 'pending',
+    releaseStatus: 'unreleased',
+    supplier: {
+      name: 'Bodega Sur - Transferencia',
+    },
+    items: [
+      {
+        productId: '1',
+        productSku: 'RE-R250-H10313',
+        productName: 'Direccional Delantera LH',
+        productImage: 'https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?w=100',
+        expectedQuantity: 30,
+        receivedQuantity: 0,
+        locationCode: '05-B-00',
+        status: 'pending',
+      },
+    ],
+    createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
   },
 ];

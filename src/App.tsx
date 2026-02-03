@@ -7,6 +7,7 @@ import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 
 // Receiving Flow (M3-M6)
+import ReceptionList from './pages/ReceptionList';
 import ReceptionStart from './pages/ReceptionStart';
 import ProductScanning from './pages/ProductScanning';
 import LocationAssignment from './pages/LocationAssignment';
@@ -49,6 +50,14 @@ function App() {
         />
 
         {/* Receiving Flow */}
+        <Route
+          path="/reception/list"
+          element={
+            <ProtectedRoute>
+              <ReceptionList />
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/reception/start"
           element={

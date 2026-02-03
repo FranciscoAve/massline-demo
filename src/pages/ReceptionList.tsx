@@ -1,28 +1,28 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Search, Package, Clock, User, Plus, CheckCircle, AlertCircle, Wrench, ChevronRight, Eye, ScanBarcode } from 'lucide-react';
-import { mockOrders } from '../data/mockData';
+import { ArrowLeft, Search, Package, Clock, User, CheckCircle, AlertCircle, ChevronRight, Eye, Truck, ScanBarcode } from 'lucide-react';
+import { mockReceptionOrders } from '../data/mockData';
 import EmptyState from '../components/ui/EmptyState';
 import { QRScannerWrapper } from '../components/scanner/QRScannerWrapper';
+import { mockApi } from '../services/mockApi';
 
-type ReleaseFilter = 'all' | 'released' | 'unreleased' | 'internal';
+type ReleaseFilter = 'all' | 'released' | 'unreleased';
 
-const OrderList: React.FC = () => {
+const ReceptionList: React.FC = () => {
   const navigate = useNavigate();
   const [selectedFilter, setSelectedFilter] = useState<ReleaseFilter>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [showScanner, setShowScanner] = useState(false);
 
   // Contadores por categoría
-  const releasedOrders = mockOrders.filter(o => o.releaseStatus === 'released');
-  const unreleasedOrders = mockOrders.filter(o => o.releaseStatus === 'unreleased');
-  const internalOrders = mockOrders.filter(o => o.releaseStatus === 'internal');
+  const releasedOrders = mockReceptionOrders.filter(o => o.releaseStatus === 'released');
+  const unreleasedOrders = mockReceptionOrders.filter(o => o.releaseStatus === 'unreleased');
 
   const categories = [
     {
       id: 'released' as const,
       label: 'Liberadas',
-      description: 'Órdenes completadas',
+      description: 'Recepciones completadas',
       count: releasedOrders.length,
       icon: CheckCircle,
       color: 'bg-green-500',
@@ -33,7 +33,7 @@ const OrderList: React.FC = () => {
     {
       id: 'unreleased' as const,
       label: 'No Liberadas',
-      description: 'Pendientes de confirmar',
+      description: 'Pendientes de recibir',
       count: unreleasedOrders.length,
       icon: AlertCircle,
       color: 'bg-orange-500',
@@ -41,21 +41,10 @@ const OrderList: React.FC = () => {
       textColor: 'text-orange-700',
       borderColor: 'border-orange-200',
     },
-    {
-      id: 'internal' as const,
-      label: 'Internas',
-      description: 'Taller de ensamblaje',
-      count: internalOrders.length,
-      icon: Wrench,
-      color: 'bg-purple-500',
-      lightColor: 'bg-purple-50',
-      textColor: 'text-purple-700',
-      borderColor: 'border-purple-200',
-    },
   ];
 
   const getFilteredOrders = () => {
-    let orders = mockOrders;
+    let orders = mockReceptionOrders;
 
     if (selectedFilter !== 'all') {
       orders = orders.filter(o => o.releaseStatus === selectedFilter);
@@ -65,7 +54,7 @@ const OrderList: React.FC = () => {
       const search = searchQuery.toLowerCase();
       orders = orders.filter(order =>
         order.orderNumber.toLowerCase().includes(search) ||
-        order.destination.name.toLowerCase().includes(search)
+        order.supplier.name.toLowerCase().includes(search)
       );
     }
 
@@ -91,30 +80,81 @@ const OrderList: React.FC = () => {
     return cat || categories[0];
   };
 
+  const getTypeLabel = (type: string) => {
+    switch (type) {
+      case 'purchase': return 'Compra';
+      case 'return': return 'Devolución';
+      case 'transfer': return 'Transferencia';
+      default: return type;
+    }
+  };
+
   // Manejar escaneo de código de barras de orden
-  const handleOrderBarcodeScan = (barcode: string) => {
+  const handleOrderBarcodeScan = async (barcode: string) => {
     setShowScanner(false);
 
     // Extraer número de orden del código escaneado
     let orderNum = barcode;
-    if (barcode.startsWith('SS:DP:')) {
+    if (barcode.startsWith('SS:OC:')) {
       orderNum = barcode.substring(6);
-    } else if (barcode.startsWith('SS:INT:')) {
-      orderNum = barcode.substring(7);
     }
 
-    // Buscar la orden
-    const order = mockOrders.find(o =>
+    // Buscar en mockReceptionOrders primero
+    const receptionOrder = mockReceptionOrders.find(o =>
       o.orderNumber === orderNum ||
       o.orderNumber.includes(orderNum)
     );
 
-    if (order) {
-      // Navegar directamente al proceso de picking
-      navigate(`/dispatch/picking/${order.id}`);
+    if (receptionOrder) {
+      // Buscar la orden en el API para obtener datos completos
+      const order = await mockApi.orders.getByNumber(receptionOrder.orderNumber);
+      if (order) {
+        // Navegar directamente al escaneo de productos
+        navigate('/reception/scan', { state: { order, hasOrder: true } });
+      }
     } else {
-      // Si no se encuentra, poner en el buscador
-      setSearchQuery(orderNum);
+      // Intentar buscar en API
+      const order = await mockApi.orders.getByNumber(orderNum);
+      if (order) {
+        navigate('/reception/scan', { state: { order, hasOrder: true } });
+      } else {
+        // Si no se encuentra, poner en el buscador
+        setSearchQuery(orderNum);
+      }
+    }
+  };
+
+  const handleOrderClick = async (order: typeof mockReceptionOrders[0]) => {
+    if (order.releaseStatus === 'released') {
+      // Ir al resumen directamente
+      navigate('/reception/confirmation', {
+        state: {
+          orderNumber: order.orderNumber,
+          supplier: order.supplier.name,
+          products: order.items.map(item => ({
+            name: item.productName,
+            sku: item.productSku,
+            quantity: item.receivedQuantity,
+            expectedQuantity: item.expectedQuantity,
+            location: item.locationCode,
+            hasDiscrepancy: item.hasDiscrepancy,
+            problemNotified: item.problemNotified,
+          })),
+        },
+      });
+    } else {
+      // Ir directo al escaneo de productos
+      const apiOrder = await mockApi.orders.getByNumber(order.orderNumber);
+      if (apiOrder) {
+        navigate('/reception/scan', { state: { order: apiOrder, hasOrder: true } });
+      } else {
+        // Fallback: ir al inicio de recepción
+        navigate('/reception/start', {
+          state: {
+            preselectedOrder: order.orderNumber,
+          },
+        });
+      }
     }
   };
 
@@ -124,12 +164,12 @@ const OrderList: React.FC = () => {
       <div className="bg-white border-b border-gray-200 px-4 py-3 sticky top-0 z-10">
         <div className="flex items-center justify-between mb-3">
           <button
-            onClick={() => navigate(-1)}
+            onClick={() => navigate('/dashboard')}
             className="w-10 h-10 flex items-center justify-center active:scale-95 transition-transform"
           >
             <ArrowLeft className="w-6 h-6 text-gray-700" />
           </button>
-          <h1 className="text-lg font-bold text-gray-900">Órdenes de Despacho</h1>
+          <h1 className="text-lg font-bold text-gray-900">Órdenes de Recepción</h1>
           <div className="w-10" />
         </div>
       </div>
@@ -166,8 +206,8 @@ const OrderList: React.FC = () => {
           {/* Total summary */}
           <div className="mt-4 pt-4 border-t border-gray-200">
             <div className="flex items-center justify-between text-sm">
-              <span className="text-gray-500">Total de órdenes</span>
-              <span className="font-bold text-gray-900">{mockOrders.length}</span>
+              <span className="text-gray-500">Total de recepciones</span>
+              <span className="font-bold text-gray-900">{mockReceptionOrders.length}</span>
             </div>
           </div>
         </div>
@@ -206,19 +246,17 @@ const OrderList: React.FC = () => {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                 <input
                   type="text"
-                  placeholder="Buscar por # orden, tienda..."
+                  placeholder="Buscar por # orden, proveedor..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
-              {/* Botón de escaneo solo para no liberadas e internas */}
-              {(selectedFilter === 'unreleased' || selectedFilter === 'internal') && (
+              {/* Botón de escaneo solo para no liberadas */}
+              {selectedFilter === 'unreleased' && (
                 <button
                   onClick={() => setShowScanner(true)}
-                  className={`w-12 h-12 rounded-xl flex items-center justify-center active:scale-95 transition-transform flex-shrink-0 ${
-                    selectedFilter === 'internal' ? 'bg-purple-500' : 'bg-orange-500'
-                  }`}
+                  className="w-12 h-12 bg-orange-500 rounded-xl flex items-center justify-center active:scale-95 transition-transform flex-shrink-0"
                   title="Escanear código de orden"
                 >
                   <ScanBarcode className="w-6 h-6 text-white" />
@@ -238,6 +276,10 @@ const OrderList: React.FC = () => {
               <div className="space-y-3">
                 {filteredOrders.map(order => {
                   const catStyle = getCategoryStyle(order.releaseStatus);
+                  const totalExpected = order.items.reduce((sum, item) => sum + item.expectedQuantity, 0);
+                  const totalReceived = order.items.reduce((sum, item) => sum + item.receivedQuantity, 0);
+                  const hasDiscrepancies = order.items.some(item => item.hasDiscrepancy);
+
                   return (
                     <div
                       key={order.id}
@@ -246,19 +288,24 @@ const OrderList: React.FC = () => {
                           ? 'border-red-500'
                           : order.releaseStatus === 'released'
                             ? 'border-green-500'
-                            : order.releaseStatus === 'internal'
-                              ? 'border-purple-500'
-                              : 'border-orange-500'
+                            : 'border-orange-500'
                       }`}
                     >
                       <div className="p-4">
                         {/* Priority & Type Badges */}
                         <div className="flex items-center gap-2 mb-2">
                           {order.releaseStatus === 'released' ? (
-                            <div className="flex items-center gap-1 bg-green-100 px-2 py-0.5 rounded-full">
-                              <CheckCircle className="w-3 h-3 text-green-600" />
-                              <span className="text-xs font-bold text-green-600">COMPLETADA</span>
-                            </div>
+                            <>
+                              <div className="flex items-center gap-1 bg-green-100 px-2 py-0.5 rounded-full">
+                                <CheckCircle className="w-3 h-3 text-green-600" />
+                                <span className="text-xs font-bold text-green-600">COMPLETADA</span>
+                              </div>
+                              {hasDiscrepancies && (
+                                <div className="flex items-center gap-1 bg-yellow-100 px-2 py-0.5 rounded-full">
+                                  <span className="text-xs font-bold text-yellow-600">CON ALERTAS</span>
+                                </div>
+                              )}
+                            </>
                           ) : (
                             <>
                               {order.priority === 'urgent' && (
@@ -275,22 +322,26 @@ const OrderList: React.FC = () => {
                               </div>
                             </>
                           )}
+                          <div className="flex items-center gap-1 bg-blue-50 px-2 py-0.5 rounded-full">
+                            <Truck className="w-3 h-3 text-blue-600" />
+                            <span className="text-xs font-medium text-blue-600">{getTypeLabel(order.type)}</span>
+                          </div>
                         </div>
 
                         {/* Order Number */}
                         <h3 className="text-base font-bold text-gray-900 mb-1">
-                          ORDEN {order.orderNumber}
+                          {order.orderNumber}
                         </h3>
 
-                        {/* Destination */}
-                        <p className="text-sm text-gray-700 mb-3">{order.destination.name}</p>
+                        {/* Supplier */}
+                        <p className="text-sm text-gray-700 mb-3">{order.supplier.name}</p>
 
                         {/* Stats */}
                         <div className="flex items-center gap-4 text-xs text-gray-600 mb-3">
                           <div className="flex items-center gap-1.5">
                             <Package className="w-4 h-4" />
                             <span>
-                              {order.items.length} productos | {order.items.reduce((sum, item) => sum + item.requestedQuantity, 0)} unidades
+                              {order.items.length} productos | {order.releaseStatus === 'released' ? `${totalReceived}/${totalExpected}` : totalExpected} unidades
                             </span>
                           </div>
                         </div>
@@ -300,38 +351,36 @@ const OrderList: React.FC = () => {
                             <Clock className="w-4 h-4" />
                             <span>{getTimeAgo(order.createdAt)}</span>
                           </div>
-                          <div className="flex items-center gap-1.5">
-                            <User className="w-4 h-4" />
-                            <span>{order.assignedTo || 'Sin asignar'}</span>
-                          </div>
+                          {order.receivedBy && (
+                            <div className="flex items-center gap-1.5">
+                              <User className="w-4 h-4" />
+                              <span>{order.receivedBy}</span>
+                            </div>
+                          )}
                         </div>
 
                         {/* Actions */}
                         <div className="flex gap-2 mt-4">
                           {order.releaseStatus === 'released' ? (
-                            // Órdenes completadas - solo ver resumen
+                            // Recepciones completadas - solo ver resumen
                             <button
-                              onClick={() => navigate(`/dispatch/confirmation/${order.id}`)}
+                              onClick={() => handleOrderClick(order)}
                               className="flex-1 py-2 rounded-lg text-sm font-bold active:scale-95 transition-transform bg-green-100 text-green-700 border border-green-300 flex items-center justify-center gap-2"
                             >
                               <Eye className="w-4 h-4" />
                               VER RESUMEN
                             </button>
                           ) : (
-                            // Órdenes pendientes - acciones normales
+                            // Recepciones pendientes - iniciar recepción
                             <>
                               <button className="flex-1 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 active:scale-95 transition-transform">
                                 Ver detalles
                               </button>
                               <button
-                                onClick={() => navigate(`/dispatch/picking/${order.id}`)}
-                                className={`flex-1 py-2 rounded-lg text-sm font-bold active:scale-95 transition-transform ${
-                                  order.releaseStatus === 'internal'
-                                    ? 'bg-purple-500 text-white'
-                                    : 'bg-orange-500 text-white'
-                                }`}
+                                onClick={() => handleOrderClick(order)}
+                                className="flex-1 py-2 rounded-lg text-sm font-bold active:scale-95 transition-transform bg-orange-500 text-white"
                               >
-                                {order.releaseStatus === 'internal' ? 'PREPARAR' : 'INICIAR PICKING'}
+                                INICIAR RECEPCIÓN
                               </button>
                             </>
                           )}
@@ -346,16 +395,6 @@ const OrderList: React.FC = () => {
         </>
       )}
 
-      {/* FAB - New Order (solo para internas) */}
-      {selectedFilter === 'internal' && (
-        <button
-          className="fixed bottom-6 right-6 w-14 h-14 bg-purple-500 text-white rounded-full shadow-lg flex items-center justify-center active:scale-95 transition-transform z-20"
-          onClick={() => alert('Crear orden interna (próximamente)')}
-        >
-          <Plus className="w-6 h-6" />
-        </button>
-      )}
-
       {/* Bottom Navigation Spacer */}
       <div className="h-20" />
 
@@ -364,14 +403,14 @@ const OrderList: React.FC = () => {
         <QRScannerWrapper
           onScan={handleOrderBarcodeScan}
           onClose={() => setShowScanner(false)}
-          title="Escanear Orden"
-          subtitle="Escanea el código de barras de la orden de despacho"
+          title="Escanear Orden de Compra"
+          subtitle="Escanea el código de barras de la orden de recepción"
           expectedType="order"
-          simulateValue={selectedFilter === 'internal' ? 'INT-2025-0023' : 'DP-2025-0145'}
+          simulateValue="OC-2025-001234"
         />
       )}
     </div>
   );
 };
 
-export default OrderList;
+export default ReceptionList;
