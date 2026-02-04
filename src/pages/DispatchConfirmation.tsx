@@ -1,24 +1,48 @@
-import React, { useState } from 'react';
+import React, { useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { CheckCircle2, Package, Clock, MapPin, Truck, User, Copy, Share2, Trophy, Printer } from 'lucide-react';
 import Button from '../components/ui/Button';
 import { mockOrders } from '../data/mockData';
-import { generateLabelFromOrder } from '../utils/dispatchLabelPdf';
+import { generateMultiCartonPdf, generateLabelFromOrder, type CartonData, type ReplacementInfo } from '../utils/dispatchLabelPdf';
+
+interface StoredCartonData {
+  cartons: CartonData[];
+  totalCartons: number;
+  replacementsUsed?: Record<string, ReplacementInfo>;
+}
 
 const DispatchConfirmation: React.FC = () => {
   const { orderId } = useParams();
   const navigate = useNavigate();
-  const [labelGenerated, setLabelGenerated] = useState(false);
 
   const order = mockOrders.find(o => o.id === orderId);
   if (!order) return <div>Order not found</div>;
 
+  // Recuperar datos de cartones de sessionStorage
+  const storedData = useMemo((): StoredCartonData | null => {
+    const stored = sessionStorage.getItem(`cartons_${orderId}`);
+    if (stored) {
+      try {
+        return JSON.parse(stored);
+      } catch {
+        return null;
+      }
+    }
+    return null;
+  }, [orderId]);
+
   const totalItems = order.items.length;
   const totalUnits = order.items.reduce((sum, item) => sum + item.requestedQuantity, 0);
+  const totalCartons = storedData?.totalCartons || 1;
 
   const handleGenerateLabel = () => {
-    generateLabelFromOrder(order, 1, 1);
-    setLabelGenerated(true);
+    if (storedData && storedData.cartons.length > 0) {
+      // Generar PDF multi-página con los cartones configurados
+      generateMultiCartonPdf(order, storedData.cartons, storedData.replacementsUsed);
+    } else {
+      // Fallback: generar etiqueta con todos los productos en un cartón
+      generateLabelFromOrder(order, 1, 1);
+    }
   };
 
   const trackingCode = order.orderNumber;
@@ -98,14 +122,10 @@ const DispatchConfirmation: React.FC = () => {
         {/* Botón para generar etiqueta PDF */}
         <button
           onClick={handleGenerateLabel}
-          className={`w-full py-3 rounded-lg text-sm font-bold flex items-center justify-center gap-2 active:scale-95 transition-transform ${
-            labelGenerated
-              ? 'bg-green-100 text-green-700 border border-green-300'
-              : 'bg-blue-500 text-white'
-          }`}
+          className="w-full py-3 rounded-lg text-sm font-bold flex items-center justify-center gap-2 active:scale-95 transition-transform bg-blue-500 text-white"
         >
           <Printer className="w-5 h-5" />
-          {labelGenerated ? '✓ ETIQUETA GENERADA' : 'GENERAR ETIQUETA PDF'}
+          GENERAR ETIQUETAS ({totalCartons} {totalCartons === 1 ? 'cartón' : 'cartones'})
         </button>
       </div>
 

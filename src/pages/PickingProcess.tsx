@@ -424,8 +424,8 @@ const PickingProcess: React.FC = () => {
           <div className="bg-white rounded-xl shadow-sm p-3 mb-4">
             <div className="flex items-center justify-between mb-2">
               <div>
-                <h3 className="text-sm font-semibold text-gray-900">Escanear Estantería</h3>
-                <p className="text-xs text-gray-500">Escanea la ubicación del siguiente producto</p>
+                <h3 className="text-sm font-semibold text-gray-900">Escanear Productos</h3>
+                <p className="text-xs text-gray-500">Escanea el código de barras del producto</p>
               </div>
               <div className="text-right">
                 <p className="text-lg font-bold text-blue-600">{completedItems}/{items.length}</p>
@@ -437,7 +437,7 @@ const PickingProcess: React.FC = () => {
               className="w-full py-3 bg-blue-500 rounded-xl flex items-center justify-center gap-2 active:scale-[0.98] transition-transform"
             >
               <ScanBarcode className="w-5 h-5 text-white" />
-              <span className="text-white font-bold">ESCANEAR UBICACIÓN</span>
+              <span className="text-white font-bold">ESCANEAR PRODUCTO</span>
             </button>
           </div>
         )}
