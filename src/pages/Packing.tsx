@@ -61,17 +61,12 @@ const Packing: React.FC = () => {
   const [showProductSelector, setShowProductSelector] = useState<number | null>(null);
 
   const order = mockOrders.find(o => o.id === orderId);
-  if (!order) return <div>Order not found</div>;
-
-  const totalItems = order.items.length;
-  const totalUnits = order.items.reduce((sum, item) => sum + item.requestedQuantity, 0);
-
-  const allChecked = Object.values(checklist).every(v => v);
-  // Permitir continuar si todo está verificado O si se reportó un problema
-  const canProceed = allChecked || issueReported;
 
   // Calcular productos disponibles (no asignados a ningún cartón o con cantidad restante)
+  // IMPORTANTE: Este hook debe estar antes de cualquier return condicional
   const availableProducts = useMemo(() => {
+    if (!order) return [];
+
     const assigned: Record<string, number> = {};
 
     // Sumar cantidades asignadas por producto
@@ -97,7 +92,16 @@ const Packing: React.FC = () => {
         };
       })
       .filter(p => p.availableQuantity > 0);
-  }, [order.items, cartonProducts, pickedItems]);
+  }, [order, cartonProducts, pickedItems]);
+
+  if (!order) return <div>Order not found</div>;
+
+  const totalItems = order.items.length;
+  const totalUnits = order.items.reduce((sum, item) => sum + item.requestedQuantity, 0);
+
+  const allChecked = Object.values(checklist).every(v => v);
+  // Permitir continuar si todo está verificado O si se reportó un problema
+  const canProceed = allChecked || issueReported;
 
   // Verificar si todos los productos están asignados
   const allProductsAssigned = availableProducts.length === 0;
