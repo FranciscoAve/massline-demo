@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { CheckCircle2, Package, Clock, MapPin, Truck, User, Copy, Share2, Trophy, Printer } from 'lucide-react';
 import Button from '../components/ui/Button';
@@ -11,25 +11,26 @@ interface StoredCartonData {
   replacementsUsed?: Record<string, ReplacementInfo>;
 }
 
+// Helper para recuperar datos de cartones de sessionStorage
+function getStoredCartonData(orderId: string | undefined): StoredCartonData | null {
+  if (!orderId) return null;
+  const stored = sessionStorage.getItem(`cartons_${orderId}`);
+  if (stored) {
+    try {
+      return JSON.parse(stored);
+    } catch {
+      return null;
+    }
+  }
+  return null;
+}
+
 const DispatchConfirmation: React.FC = () => {
   const { orderId } = useParams();
   const navigate = useNavigate();
 
   const order = mockOrders.find(o => o.id === orderId);
-
-  // Recuperar datos de cartones de sessionStorage
-  // IMPORTANTE: Este hook debe estar antes de cualquier return condicional
-  const storedData = useMemo((): StoredCartonData | null => {
-    const stored = sessionStorage.getItem(`cartons_${orderId}`);
-    if (stored) {
-      try {
-        return JSON.parse(stored);
-      } catch {
-        return null;
-      }
-    }
-    return null;
-  }, [orderId]);
+  const storedData = getStoredCartonData(orderId);
 
   if (!order) return <div>Order not found</div>;
 
