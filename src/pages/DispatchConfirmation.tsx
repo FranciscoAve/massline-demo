@@ -16,9 +16,9 @@ const DispatchConfirmation: React.FC = () => {
   const navigate = useNavigate();
 
   const order = mockOrders.find(o => o.id === orderId);
-  if (!order) return <div>Order not found</div>;
 
   // Recuperar datos de cartones de sessionStorage
+  // IMPORTANTE: Este hook debe estar antes de cualquier return condicional
   const storedData = useMemo((): StoredCartonData | null => {
     const stored = sessionStorage.getItem(`cartons_${orderId}`);
     if (stored) {
@@ -30,6 +30,8 @@ const DispatchConfirmation: React.FC = () => {
     }
     return null;
   }, [orderId]);
+
+  if (!order) return <div>Order not found</div>;
 
   const totalItems = order.items.length;
   const totalUnits = order.items.reduce((sum, item) => sum + item.requestedQuantity, 0);
