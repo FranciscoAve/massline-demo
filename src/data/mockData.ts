@@ -639,6 +639,79 @@ export const mockOrders: PickingOrder[] = [
   },
 ];
 
+// Inventario mock por ubicación (simula lo almacenado en recepción)
+export interface ShelfProduct {
+  sku: string;
+  name: string;
+  image: string;
+  availableQuantity: number;
+}
+
+// Inventario por ubicación con formato: Fila-Columna-Nivel (ej: 05-B-00)
+export const mockShelfInventory: Record<string, ShelfProduct[]> = {
+  // Fila 05
+  '05-B-00': [
+    { sku: 'RE-R250-H10313', name: 'Direccional Delantera LH', image: 'https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?w=100', availableQuantity: 50 },
+  ],
+  '05-B-08': [
+    { sku: 'RE-R250-I10312', name: 'Direccional Delantera RH', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 30 },
+  ],
+  // Fila 08
+  '08-D-01': [
+    { sku: 'RE-R250-I10504', name: 'Comando Derecho Chief 4V Ninja 2.5/3.0', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 3 },
+  ],
+  // Fila 11
+  '11-F-04': [
+    { sku: 'RE-R250-I0709', name: 'Estribo de Conductor C/Pedales Izq./Der.', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 28 },
+  ],
+  // Fila 12
+  '12-B-03': [
+    { sku: 'RE-R250-K20415', name: 'Disco de Freno Ventilado', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 22 },
+  ],
+  // Fila 14
+  '14-C-02': [
+    { sku: 'RE-R250-L40820', name: 'Aceite Motor 10W-40 Sintético', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 120 },
+  ],
+  // Fila 17
+  '17-E-01': [
+    { sku: 'RE-RNJ-250302', name: 'Cañería del Enfriador de Aceite Set 2pcs', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 67 },
+  ],
+  // Fila 18
+  '18-C-06': [
+    { sku: 'RE-RNJ-110237', name: 'Piñón de Velocímetro Chief II', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 15 },
+  ],
+  // Fila 23
+  '23-A-01': [
+    { sku: 'RE-RNJ-330501', name: 'Batería 12V 7Ah', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 35 },
+    { sku: 'RE-R200-142125', name: 'Asiento Delantero & Posterior Set Chief II', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 8 },
+  ],
+};
+
+// Mapa de SKU a ubicación para búsqueda rápida
+export const skuToLocation: Record<string, string> = Object.entries(mockShelfInventory).reduce(
+  (acc, [location, products]) => {
+    products.forEach(product => {
+      acc[product.sku] = location;
+    });
+    return acc;
+  },
+  {} as Record<string, string>
+);
+
+// Helper para obtener ubicación de un producto por SKU
+export const getLocationBySku = (sku: string): string => {
+  return skuToLocation[sku] || '';
+};
+
+// Helper para obtener stock disponible de un producto por SKU
+export const getAvailableStockBySku = (sku: string): number => {
+  const location = skuToLocation[sku];
+  if (!location) return 0;
+  const products = mockShelfInventory[location] || [];
+  const product = products.find(p => p.sku === sku);
+  return product?.availableQuantity ?? 0;
+};
+
 // Mock Reception Orders
 export const mockReceptionOrders: ReceptionOrder[] = [
   // Recepciones Liberadas (completadas)

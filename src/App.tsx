@@ -4,7 +4,8 @@ import { useAuthStore } from './stores/authStore';
 
 // Pages
 import Login from './pages/Login';
-import Dashboard from './pages/Dashboard';
+import RoleBasedDashboard from './components/layout/RoleBasedDashboard';
+import CreateInternalOrder from './pages/CreateInternalOrder';
 
 // Receiving Flow (M3-M6)
 import ReceptionList from './pages/ReceptionList';
@@ -44,7 +45,17 @@ function App() {
           path="/dashboard"
           element={
             <ProtectedRoute>
-              <Dashboard />
+              <RoleBasedDashboard />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Workshop Routes */}
+        <Route
+          path="/workshop/create-order"
+          element={
+            <ProtectedRoute allowedRoles={['workshop']}>
+              <CreateInternalOrder />
             </ProtectedRoute>
           }
         />

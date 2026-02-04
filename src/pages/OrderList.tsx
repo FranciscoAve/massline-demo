@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Search, Package, Clock, User, Plus, CheckCircle, AlertCircle, Wrench, ChevronRight, Eye, ScanBarcode } from 'lucide-react';
+import { ArrowLeft, Search, Package, Clock, User, CheckCircle, AlertCircle, Wrench, ChevronRight, Eye, ScanBarcode } from 'lucide-react';
 import { mockOrders } from '../data/mockData';
+import { useWorkshopOrdersStore } from '../stores/workshopOrdersStore';
 import EmptyState from '../components/ui/EmptyState';
 import { QRScannerWrapper } from '../components/scanner/QRScannerWrapper';
 
@@ -13,10 +14,18 @@ const OrderList: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [showScanner, setShowScanner] = useState(false);
 
+  // Obtener órdenes del taller desde el store
+  const { orders: workshopOrders } = useWorkshopOrdersStore();
+
+  // Combinar mockOrders con órdenes del taller
+  const allOrders = useMemo(() => {
+    return [...mockOrders, ...workshopOrders];
+  }, [workshopOrders]);
+
   // Contadores por categoría
-  const releasedOrders = mockOrders.filter(o => o.releaseStatus === 'released');
-  const unreleasedOrders = mockOrders.filter(o => o.releaseStatus === 'unreleased');
-  const internalOrders = mockOrders.filter(o => o.releaseStatus === 'internal');
+  const releasedOrders = allOrders.filter(o => o.releaseStatus === 'released');
+  const unreleasedOrders = allOrders.filter(o => o.releaseStatus === 'unreleased');
+  const internalOrders = allOrders.filter(o => o.releaseStatus === 'internal');
 
   const categories = [
     {
@@ -55,7 +64,7 @@ const OrderList: React.FC = () => {
   ];
 
   const getFilteredOrders = () => {
-    let orders = mockOrders;
+    let orders = allOrders;
 
     if (selectedFilter !== 'all') {
       orders = orders.filter(o => o.releaseStatus === selectedFilter);
@@ -104,7 +113,7 @@ const OrderList: React.FC = () => {
     }
 
     // Buscar la orden
-    const order = mockOrders.find(o =>
+    const order = allOrders.find(o =>
       o.orderNumber === orderNum ||
       o.orderNumber.includes(orderNum)
     );
@@ -167,7 +176,7 @@ const OrderList: React.FC = () => {
           <div className="mt-4 pt-4 border-t border-gray-200">
             <div className="flex items-center justify-between text-sm">
               <span className="text-gray-500">Total de órdenes</span>
-              <span className="font-bold text-gray-900">{mockOrders.length}</span>
+              <span className="font-bold text-gray-900">{allOrders.length}</span>
             </div>
           </div>
         </div>
@@ -344,16 +353,6 @@ const OrderList: React.FC = () => {
             )}
           </div>
         </>
-      )}
-
-      {/* FAB - New Order (solo para internas) */}
-      {selectedFilter === 'internal' && (
-        <button
-          className="fixed bottom-6 right-6 w-14 h-14 bg-purple-500 text-white rounded-full shadow-lg flex items-center justify-center active:scale-95 transition-transform z-20"
-          onClick={() => alert('Crear orden interna (próximamente)')}
-        >
-          <Plus className="w-6 h-6" />
-        </button>
       )}
 
       {/* Bottom Navigation Spacer */}

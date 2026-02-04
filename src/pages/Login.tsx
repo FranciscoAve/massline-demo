@@ -181,7 +181,7 @@ const Login: React.FC = () => {
           {/* Demo credentials hint */}
           <div className="mt-6 p-4 bg-info-bg border border-info-border rounded-lg">
             <p className="text-xs text-info font-medium mb-2">
-              💡 Credenciales de prueba:
+              Credenciales de prueba:
             </p>
             <div className="text-xs text-text-secondary space-y-1">
               <p>
@@ -189,6 +189,9 @@ const Login: React.FC = () => {
               </p>
               <p>
                 <strong>Admin:</strong> admin / admin123
+              </p>
+              <p>
+                <strong>Taller:</strong> taller / taller123
               </p>
             </div>
           </div>

@@ -3,6 +3,7 @@ import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { CheckCircle2, Camera, Printer, Package, AlertTriangle, X, RefreshCw, Plus, Minus, ChevronDown, ChevronUp, Trash2 } from 'lucide-react';
 import Button from '../components/ui/Button';
 import { mockOrders, type PickingItem } from '../data/mockData';
+import { useWorkshopOrdersStore } from '../stores/workshopOrdersStore';
 import { generateLabelFromOrder, generateMultiCartonPdf, type ReplacementInfo, type CartonData } from '../utils/dispatchLabelPdf';
 
 interface LocationState {
@@ -60,7 +61,10 @@ const Packing: React.FC = () => {
   const [expandedCarton, setExpandedCarton] = useState<number | null>(1);
   const [showProductSelector, setShowProductSelector] = useState<number | null>(null);
 
-  const order = mockOrders.find(o => o.id === orderId);
+  // Combinar órdenes mock con órdenes del taller
+  const { orders: workshopOrders } = useWorkshopOrdersStore();
+  const allOrders = useMemo(() => [...mockOrders, ...workshopOrders], [workshopOrders]);
+  const order = allOrders.find(o => o.id === orderId);
 
   // Calcular productos disponibles (no asignados a ningún cartón o con cantidad restante)
   // IMPORTANTE: Este hook debe estar antes de cualquier return condicional

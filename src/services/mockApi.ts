@@ -41,6 +41,15 @@ const mockUsers: { [key: string]: { password: string; user: User } } = {
       role: 'supervisor',
     },
   },
+  'taller': {
+    password: 'taller123',
+    user: {
+      id: '4',
+      name: 'Taller de Ensamblaje',
+      email: 'taller@massline.com',
+      role: 'workshop',
+    },
+  },
 };
 
 // Mock tasks - vinculadas a órdenes reales en mockData.ts

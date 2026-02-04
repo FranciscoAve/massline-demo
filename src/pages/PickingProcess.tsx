@@ -3,55 +3,8 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, MapPin, ScanBarcode, Minus, Plus, CheckCircle2, Package, X, AlertTriangle, Bell, RefreshCw } from 'lucide-react';
 import { QRScannerWrapper } from '../components/scanner/QRScannerWrapper';
 import Button from '../components/ui/Button';
-import { mockOrders, type PickingItem } from '../data/mockData';
-
-// Inventario mock por ubicación (simula lo almacenado en recepción)
-interface ShelfProduct {
-  sku: string;
-  name: string;
-  image: string;
-  availableQuantity: number;
-}
-
-// Inventario por ubicación con formato: Fila-Columna-Nivel (ej: 05-B-00)
-const mockShelfInventory: Record<string, ShelfProduct[]> = {
-  // Fila 05
-  '05-B-00': [
-    { sku: 'RE-R250-H10313', name: 'Direccional Delantera LH', image: 'https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?w=100', availableQuantity: 50 },
-  ],
-  '05-B-08': [
-    { sku: 'RE-R250-I10312', name: 'Direccional Delantera RH', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 30 },
-  ],
-  // Fila 08
-  '08-D-01': [
-    { sku: 'RE-R250-I10504', name: 'Comando Derecho Chief 4V Ninja 2.5/3.0', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 3 },
-  ],
-  // Fila 11
-  '11-F-04': [
-    { sku: 'RE-R250-I0709', name: 'Estribo de Conductor C/Pedales Izq./Der.', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 28 },
-  ],
-  // Fila 12
-  '12-B-03': [
-    { sku: 'RE-R250-K20415', name: 'Disco de Freno Ventilado', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 22 },
-  ],
-  // Fila 14
-  '14-C-02': [
-    { sku: 'RE-R250-L40820', name: 'Aceite Motor 10W-40 Sintético', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 120 },
-  ],
-  // Fila 17
-  '17-E-01': [
-    { sku: 'RE-RNJ-250302', name: 'Cañería del Enfriador de Aceite Set 2pcs', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 67 },
-  ],
-  // Fila 18
-  '18-C-06': [
-    { sku: 'RE-RNJ-110237', name: 'Piñón de Velocímetro Chief II', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 15 },
-  ],
-  // Fila 23
-  '23-A-01': [
-    { sku: 'RE-RNJ-330501', name: 'Batería 12V 7Ah', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 35 },
-    { sku: 'RE-R200-142125', name: 'Asiento Delantero & Posterior Set Chief II', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 8 },
-  ],
-};
+import { mockOrders, mockShelfInventory, type PickingItem } from '../data/mockData';
+import { useWorkshopOrdersStore } from '../stores/workshopOrdersStore';
 
 // Mapa de reemplazos de productos (simulación de algoritmo de concordancia)
 // Cada producto tiene un reemplazo "similar" - en producción sería un algoritmo real
@@ -89,7 +42,10 @@ const PickingProcess: React.FC = () => {
   const { orderId } = useParams();
   const navigate = useNavigate();
 
-  const order = mockOrders.find(o => o.id === orderId);
+  // Combinar órdenes mock con órdenes del taller
+  const { orders: workshopOrders } = useWorkshopOrdersStore();
+  const allOrders = useMemo(() => [...mockOrders, ...workshopOrders], [workshopOrders]);
+  const order = allOrders.find(o => o.id === orderId);
 
   const [items, setItems] = useState<PickingItem[]>(order?.items || []);
   const [shelfInventory, setShelfInventory] = useState(mockShelfInventory);

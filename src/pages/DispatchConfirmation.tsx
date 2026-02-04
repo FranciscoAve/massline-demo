@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { CheckCircle2, Package, Clock, MapPin, Truck, User, Copy, Share2, Trophy, Printer } from 'lucide-react';
+import { CheckCircle2, Package, Clock, MapPin, Truck, User, Copy, Share2, Trophy, Printer, Check } from 'lucide-react';
 import Button from '../components/ui/Button';
 import { mockOrders } from '../data/mockData';
+import { useWorkshopOrdersStore } from '../stores/workshopOrdersStore';
 import { generateMultiCartonPdf, generateLabelFromOrder, type CartonData, type ReplacementInfo } from '../utils/dispatchLabelPdf';
 
 interface StoredCartonData {
@@ -29,8 +30,15 @@ const DispatchConfirmation: React.FC = () => {
   const { orderId } = useParams();
   const navigate = useNavigate();
 
-  const order = mockOrders.find(o => o.id === orderId);
+  // Combinar órdenes mock con órdenes del taller
+  const { orders: workshopOrders, updateOrderReleaseStatus, updateOrderStatus } = useWorkshopOrdersStore();
+  const allOrders = useMemo(() => [...mockOrders, ...workshopOrders], [workshopOrders]);
+  const order = allOrders.find(o => o.id === orderId);
   const storedData = getStoredCartonData(orderId);
+
+  // Estado para marcar como liberada (solo órdenes internas del taller)
+  const isWorkshopOrder = orderId?.startsWith('workshop-');
+  const [markedAsReleased, setMarkedAsReleased] = useState(order?.releaseStatus === 'released');
 
   if (!order) return <div>Order not found</div>;
 
@@ -45,6 +53,14 @@ const DispatchConfirmation: React.FC = () => {
     } else {
       // Fallback: generar etiqueta con todos los productos en un cartón
       generateLabelFromOrder(order, 1, 1);
+    }
+  };
+
+  const handleMarkAsReleased = () => {
+    if (isWorkshopOrder && orderId) {
+      updateOrderReleaseStatus(orderId, 'released');
+      updateOrderStatus(orderId, 'dispatched');
+      setMarkedAsReleased(true);
     }
   };
 
@@ -131,6 +147,43 @@ const DispatchConfirmation: React.FC = () => {
           GENERAR ETIQUETAS ({totalCartons} {totalCartons === 1 ? 'cartón' : 'cartones'})
         </button>
       </div>
+
+      {/* Mark as Released - Solo para órdenes internas del taller */}
+      {isWorkshopOrder && (
+        <div className={`rounded-xl p-4 mb-4 border-2 transition-all ${
+          markedAsReleased
+            ? 'bg-green-50 border-green-300'
+            : 'bg-purple-50 border-purple-200'
+        }`}>
+          <div className="flex items-center justify-between">
+            <div className="flex-1">
+              <p className="font-semibold text-gray-900 mb-1">
+                {markedAsReleased ? '✓ Orden Liberada' : 'Orden Interna'}
+              </p>
+              <p className="text-sm text-gray-600">
+                {markedAsReleased
+                  ? 'Esta orden ha sido marcada como completada y liberada.'
+                  : 'Marca esta orden como liberada para indicar que fue entregada al taller.'
+                }
+              </p>
+            </div>
+            {!markedAsReleased && (
+              <button
+                onClick={handleMarkAsReleased}
+                className="ml-4 px-4 py-2 bg-purple-600 text-white rounded-lg font-medium flex items-center gap-2 hover:bg-purple-700 active:scale-95 transition-all"
+              >
+                <Check className="w-4 h-4" />
+                Liberar
+              </button>
+            )}
+            {markedAsReleased && (
+              <div className="ml-4 w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
+                <Check className="w-6 h-6 text-white" />
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Performance Metrics */}
       <div className="bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl p-4 mb-4">
