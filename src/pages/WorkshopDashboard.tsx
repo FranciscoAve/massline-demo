@@ -6,6 +6,7 @@ import Badge from '../components/ui/Badge';
 import { useAuthStore } from '../stores/authStore';
 import { useWorkshopOrdersStore } from '../stores/workshopOrdersStore';
 import { formatRelativeTime } from '../lib/utils';
+import BottomNav from '../components/layout/BottomNav';
 
 const WorkshopDashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -73,7 +74,7 @@ const WorkshopDashboard: React.FC = () => {
         </div>
       </header>
 
-      <div className="flex-1 p-4 space-y-4">
+      <div className="flex-1 p-4 pb-24 space-y-4">
         {/* Welcome Card */}
         <div className="bg-gradient-to-br from-purple-500 to-purple-700 rounded-2xl p-5 text-white shadow-lg">
           <div className="flex items-center gap-3 mb-3">
@@ -181,8 +182,8 @@ const WorkshopDashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* Bottom padding for mobile */}
-      <div className="h-4" />
+      {/* Bottom Navigation */}
+      <BottomNav />
 
       {/* Delete Confirmation Modal */}
       {orderToDelete && (

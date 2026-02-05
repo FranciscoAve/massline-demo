@@ -7,7 +7,8 @@ import type {
   Order,
   DashboardStats,
 } from '../types';
-import { mockReceptionOrders } from '../data/mockData';
+import { mockReceptionOrders, mockOrders } from '../data/mockData';
+import { useWorkshopOrdersStore } from '../stores/workshopOrdersStore';
 
 // Mock delay to simulate network request
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -158,8 +159,20 @@ export const mockApi = {
   dashboard: {
     getStats: async (): Promise<DashboardStats> => {
       await delay(500);
+
+      // Calcular órdenes pendientes de despacho (mockOrders + workshopOrders)
+      const workshopOrders = useWorkshopOrdersStore.getState().orders;
+      const pendingDispatchOrders = mockOrders.filter(o => o.status === 'pending').length;
+      const pendingWorkshopOrders = workshopOrders.filter(o => o.status === 'pending').length;
+
+      // Calcular recepciones pendientes
+      const pendingReceptions = mockReceptionOrders.filter(o => o.status === 'pending').length;
+
+      // Total de órdenes pendientes (despacho + recepción + taller)
+      const totalPendingOrders = pendingDispatchOrders + pendingWorkshopOrders + pendingReceptions;
+
       return {
-        pendingOrders: 12,
+        pendingOrders: totalPendingOrders,
         productsReceivedToday: 145,
         tasksAssigned: mockTasks.filter((t) => t.status === 'pending').length,
         lowStockAlerts: 5,

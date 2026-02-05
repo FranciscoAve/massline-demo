@@ -5,8 +5,6 @@ import {
   PackageCheck,
   Search,
   AlertCircle,
-  Bell,
-  QrCode,
   Clock,
 } from 'lucide-react';
 import Card from '../components/ui/Card';
@@ -15,6 +13,7 @@ import Button from '../components/ui/Button';
 import Logo from '../components/ui/Logo';
 import Spinner from '../components/ui/Spinner';
 import SyncStatus from '../components/ui/SyncStatus';
+import BottomNav from '../components/layout/BottomNav';
 import { useAuthStore } from '../stores/authStore';
 import { useOfflineSync } from '../hooks';
 import { mockApi } from '../services/mockApi';
@@ -27,7 +26,7 @@ import type { DashboardStats, Task } from '../types';
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
-  const { user, logout } = useAuthStore();
+  const { user } = useAuthStore();
   const { isOnline, pendingCount, isSyncing, syncNow } = useOfflineSync();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -152,16 +151,8 @@ const Dashboard: React.FC = () => {
             onSyncClick={syncNow}
             variant="badge"
           />
-          <button className="relative touch-target flex items-center justify-center">
-            <Bell className="h-6 w-6 text-text-secondary" />
-            {stats && stats.lowStockAlerts > 0 && (
-              <span className="absolute -top-1 -right-1 bg-error text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
-                {stats.lowStockAlerts}
-              </span>
-            )}
-          </button>
           <button
-            onClick={logout}
+            onClick={() => navigate('/profile')}
             className="h-10 w-10 rounded-full flex items-center justify-center text-white font-semibold text-sm"
             style={{ backgroundColor: getColorFromString(user?.name || '') }}
           >
@@ -342,39 +333,7 @@ const Dashboard: React.FC = () => {
       </div>
 
       {/* Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-border-light px-2 py-2 z-50">
-        <div className="flex items-center justify-around">
-          <button className="flex flex-col items-center gap-1 px-3 py-2 text-primary">
-            <div className="h-1 w-8 bg-primary rounded-full mb-1" />
-            <span className="text-xs font-medium">Home</span>
-          </button>
-          <button
-            className="flex flex-col items-center gap-1 px-3 py-2 text-text-tertiary"
-            onClick={() => navigate('/tasks')}
-          >
-            <PackageCheck className="h-6 w-6" />
-            <span className="text-xs">Tareas</span>
-          </button>
-          <button className="flex flex-col items-center gap-1 px-3 py-2 text-text-tertiary">
-            <QrCode className="h-6 w-6" />
-            <span className="text-xs">Escanear</span>
-          </button>
-          <button
-            className="flex flex-col items-center gap-1 px-3 py-2 text-text-tertiary"
-            onClick={() => navigate('/query')}
-          >
-            <Search className="h-6 w-6" />
-            <span className="text-xs">Consultas</span>
-          </button>
-          <button
-            className="flex flex-col items-center gap-1 px-3 py-2 text-text-tertiary"
-            onClick={logout}
-          >
-            <AlertCircle className="h-6 w-6" />
-            <span className="text-xs">Perfil</span>
-          </button>
-        </div>
-      </nav>
+      <BottomNav />
     </div>
   );
 };

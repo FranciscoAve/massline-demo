@@ -4,6 +4,7 @@ import { ArrowLeft, Search, ScanBarcode, MapPin, X, Package, RefreshCw, ChevronR
 import { QRScannerWrapper } from '../components/scanner/QRScannerWrapper';
 import EmptyState from '../components/ui/EmptyState';
 import { mockProducts, getAvailableStockBySku, getLocationBySku, getReplacementFor, getReplacedBy } from '../data/mockData';
+import BottomNav from '../components/layout/BottomNav';
 
 // Helper para obtener el estado del stock
 const getStockStatus = (stock: number): { label: string; color: string; bgColor: string } => {
@@ -350,6 +351,7 @@ const QueryModule: React.FC = () => {
 
       {/* Bottom Nav Spacer */}
       <div className="h-20" />
+      <BottomNav />
     </div>
   );
 };
