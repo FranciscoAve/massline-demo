@@ -117,9 +117,9 @@ export const QRScanner: React.FC<QRScannerProps> = ({
     let mockCode = simulateValue || 'MOCK-CODE';
     if (!simulateValue) {
       if (expectedType === 'product') {
-        mockCode = 'REP-12345';
+        mockCode = 'RE-R250-H10313'; // Direccional Delantera LH - SKU real
       } else if (expectedType === 'location') {
-        mockCode = 'Z01-Pa-E1-N1';
+        mockCode = '05-B-00'; // Ubicación real
       } else if (expectedType === 'order') {
         mockCode = 'OC-2025-001234';
       }

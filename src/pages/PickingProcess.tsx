@@ -3,29 +3,8 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, MapPin, ScanBarcode, Minus, Plus, CheckCircle2, Package, X, AlertTriangle, Bell, RefreshCw } from 'lucide-react';
 import { QRScannerWrapper } from '../components/scanner/QRScannerWrapper';
 import Button from '../components/ui/Button';
-import { mockOrders, mockShelfInventory, type PickingItem } from '../data/mockData';
+import { mockOrders, mockShelfInventory, productReplacements, type PickingItem, type ProductReplacement } from '../data/mockData';
 import { useWorkshopOrdersStore } from '../stores/workshopOrdersStore';
-
-// Mapa de reemplazos de productos (simulación de algoritmo de concordancia)
-// Cada producto tiene un reemplazo "similar" - en producción sería un algoritmo real
-interface ProductReplacement {
-  sku: string;
-  name: string;
-  location: string;
-}
-
-const productReplacements: Record<string, ProductReplacement> = {
-  'RE-R250-H10313': { sku: 'RE-R250-I10312', name: 'Direccional Delantera RH', location: '05-B-08' },
-  'RE-R250-I10312': { sku: 'RE-R250-H10313', name: 'Direccional Delantera LH', location: '05-B-00' },
-  'RE-R250-I10504': { sku: 'RE-R250-I0709', name: 'Estribo de Conductor C/Pedales', location: '11-F-04' },
-  'RE-R250-I0709': { sku: 'RE-R250-I10504', name: 'Comando Derecho Chief 4V', location: '08-D-01' },
-  'RE-RNJ-250302': { sku: 'RE-R250-L40820', name: 'Aceite Motor 10W-40 Sintético', location: '14-C-02' },
-  'RE-RNJ-110237': { sku: 'RE-R250-K20415', name: 'Disco de Freno Ventilado', location: '12-B-03' },
-  'RE-R200-142125': { sku: 'RE-RNJ-330501', name: 'Batería 12V 7Ah', location: '23-A-01' },
-  'RE-R250-K20415': { sku: 'RE-RNJ-110237', name: 'Piñón de Velocímetro Chief II', location: '18-C-06' },
-  'RE-RNJ-330501': { sku: 'RE-R200-142125', name: 'Asiento Delantero & Posterior Set', location: '23-A-01' },
-  'RE-R250-L40820': { sku: 'RE-RNJ-250302', name: 'Cañería del Enfriador de Aceite', location: '17-E-01' },
-};
 
 // Parsear ubicación para ordenar (formato: Fila-Columna-Nivel)
 const parseLocation = (loc: string) => {
