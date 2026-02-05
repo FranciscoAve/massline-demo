@@ -672,7 +672,7 @@ export const mockShelfInventory: Record<string, ShelfProduct[]> = {
 
   ],
   '01-F-01': [
-    { sku: 'RE-R250-Q80007', name: 'Retenes de Horquilla', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 45 },
+    { sku: 'RE-R250-Q80017', name: 'Retenes de Horquilla', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 45 },
   ],
   //Fila 02
   '02-A-05': [
@@ -788,7 +788,7 @@ export const mockShelfInventory: Record<string, ShelfProduct[]> = {
     { sku: 'RE-R250-I10505', name: 'Comando Izquierdo Chief 4V', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 5 },
   ],
   '08-E-03': [
-    { sku: 'RE-R250-I10510', name: 'Manubrio Cromado', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 12 },
+    { sku: 'RE-R250-I10511', name: 'Manubrio Cromado', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 12 },
   ],
   //Fila 09
   '09-A-01': [
@@ -798,7 +798,7 @@ export const mockShelfInventory: Record<string, ShelfProduct[]> = {
     { sku: 'RE-R250-Q80030', name: 'Bendix de Arranque', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 17 },
   ],
   '09-A-05': [
-   { sku: 'RE-R250-Q80031', name: 'Cable de Embrague', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 34 },
+    { sku: 'RE-R250-Q80031', name: 'Cable de Embrague', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 34 },
   ],
   '09-B-02': [
     { sku: 'RE-R250-Q80032', name: 'Cable de Acelerador', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 38 },
@@ -1009,6 +1009,34 @@ export const mockShelfInventory: Record<string, ShelfProduct[]> = {
   '12-G-01': [
     { sku: 'RE-R250-Q80050', name: 'Pedal de Cambios', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 24 },
   ],
+  //Fila 13
+  '13-A-01': [
+    { sku: 'RE-R250-Q80101', name: 'Carter de Motor', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 6 },
+  ],
+  '13-A-05': [
+    { sku: 'RE-R250-Q80102', name: 'Tapa de Carter', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 12 },
+  ],
+  '13-C-02': [
+    { sku: 'RE-R250-Q80103', name: 'Filtro de Aceite Magnético', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 33 },
+  ],
+  '13-D-01': [
+    { sku: 'RE-R250-Q80104', name: 'Enfriador de Aceite', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 9 },
+  ],
+  '13-D-03': [
+    { sku: 'RE-R250-Q80105', name: 'Tapón de Aceite', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 40 },
+  ],
+  '13-E-01': [
+    { sku: 'RE-R250-Q80106', name: 'Soporte de Amortiguador', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 11 },
+  ],
+  '13-F-02': [
+    { sku: 'RE-R250-Q80107', name: 'Eje de Rueda Delantera', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 17 },
+  ],
+  '13-G-01': [
+    { sku: 'RE-R250-Q80108', name: 'Eje de Rueda Trasera', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 17 },
+  ],
+  '13-G-02': [
+    { sku: 'RE-R250-Q80109', name: 'Rodamiento de Rueda Delantera', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 50 },
+  ],
   // Fila 14
   '14-C-02': [
     { sku: 'RE-R250-L40820', name: 'Aceite Motor 10W-40 Sintético', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 120 },
@@ -1018,6 +1046,38 @@ export const mockShelfInventory: Record<string, ShelfProduct[]> = {
   ],
   '14-D-01': [
     { sku: 'RE-R250-L40830', name: 'Líquido de Frenos DOT4', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 80 },
+  ],
+  //Fila 15
+  '15-A-01': [
+    { sku: 'RE-R250-Q80110', name: 'Rodamiento de Rueda Trasera', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 50 },
+  ],
+  '15-B-01': [
+    { sku: 'RE-R250-Q80111', name: 'Soporte de Pinza de Freno', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 13 },
+  ],
+  '15-C-01': [
+    { sku: 'RE-R250-Q80112', name: 'Pinza de Freno Delantera', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 9 },
+  ],
+  '15-D-01': [
+    { sku: 'RE-R250-Q80113', name: 'Pinza de Freno Trasera', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 9 },
+  ],
+  '15-E-01': [
+    { sku: 'RE-R250-Q80114', name: 'Bomba de Freno Delantera', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 14 },
+  ],
+  '15-F-01': [
+    { sku: 'RE-R250-Q80115', name: 'Bomba de Freno Trasera', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 14 },
+  ],
+  //Fila16
+  '16-A-01': [
+    { sku: 'RE-R250-Q80116', name: 'Depósito de Líquido de Freno', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 21 },
+  ],
+  '16-B-01': [
+    { sku: 'RE-R250-Q80117', name: 'Manguera de Freno', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 35 },
+  ],
+  '16-D-01': [
+    { sku: 'RE-R250-Q80118', name: 'Interruptor de Luz de Freno', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 27 },
+  ],
+  '16-F-01': [
+    { sku: 'RE-R250-Q80119', name: 'Soporte de Guardabarros', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 10 },
   ],
   // Fila 17
   '17-E-01': [
@@ -1033,6 +1093,49 @@ export const mockShelfInventory: Record<string, ShelfProduct[]> = {
   '18-A-03': [
     { sku: 'RE-RNJ-110240', name: 'Cable de Velocímetro', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 30 },
   ],
+  //Fila 19
+  '19-A-03': [
+    { sku: 'RE-R250-Q80120', name: 'Rejilla de Radiador', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 16 },
+  ],
+  '19-B-03': [
+    { sku: 'RE-R250-Q80121', name: 'Cubierta Lateral Izquierda', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 8 },
+  ],
+  '19-C-03': [
+    { sku: 'RE-R250-Q80122', name: 'Cubierta Lateral Derecha', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 8 },
+  ],
+  '19-D-03': [
+    { sku: 'RE-R250-Q80123', name: 'Protector de Cadena Inferior', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 15 },
+  ],
+  //Fila 20
+  '20-A-02': [
+    { sku: 'RE-R250-Q80124', name: 'Soporte de Placa Trasera', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 18 },
+  ],
+  '20-B-02': [
+    { sku: 'RE-R250-Q80125', name: 'Luz Trasera LED', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 20 },
+  ],
+  '20-C-02': [
+    { sku: 'RE-R250-Q80126', name: 'Portaequipaje Trasero', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 6 },
+  ],
+  //Fila 21
+  '21-A-05': [
+    { sku: 'RE-R250-Q80127', name: 'Defensa Lateral', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 7 },
+  ],
+  '21-B-05': [
+    { sku: 'RE-R250-Q80128', name: 'Pedal de Arranque', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 13 },
+  ],
+  '21-G-05': [
+    { sku: 'RE-R250-Q80129', name: 'Tornillo de Culata', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 70 },
+  ],
+  //Fila 22
+  '22-A-03': [
+    { sku: 'RE-R250-Q80130', name: 'Kit de Pernos Motor', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 32 },
+  ],
+  '22-B-03': [
+    { sku: 'RE-R250-Q80131', name: 'Soporte de Escape Inferior', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 9 },
+  ],
+  '22-E-03': [
+    { sku: 'RE-R250-Q80132', name: 'Protector de Radiador', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 11 },
+  ],
   // Fila 23
   '23-A-01': [
     { sku: 'RE-RNJ-330501', name: 'Batería 12V 7Ah', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 35 },
@@ -1043,12 +1146,71 @@ export const mockShelfInventory: Record<string, ShelfProduct[]> = {
   '23-B-04': [
     { sku: 'RE-RNJ-330510', name: 'Batería 12V 12Ah Reforzada', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 20 },
   ],
+  //Fila 24
+  '24-A-01': [
+    { sku: 'RE-R250-Q80133', name: 'Rodillo de Cadena', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 24 },
+  ],
+  '24-B-01': [
+    { sku: 'RE-R250-Q80134', name: 'Soporte de Cadena', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 19 },
+  ],
+  '24-C-01': [
+    { sku: 'RE-R250-Q80135', name: 'Guía de Cableado', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 40 },
+  ],
+  //Fila 25
+  '25-A-01': [
+    { sku: 'RE-R250-Q80136', name: 'Tapón de Radiador', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 21 },
+  ],
+  '25-B-01': [
+    { sku: 'RE-R250-Q80137', name: 'Sensor de Presión de Aceite', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 14 },
+  ],
+  //Fila 26
+  '26-A-02': [
+    { sku: 'RE-R250-Q80138', name: 'Interruptor Principal', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 12 },
+  ],
+  '26-B-02': [
+    { sku: 'RE-R250-Q80139', name: 'Soporte de Faro', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 10 },
+  ],
+  '26-C-02': [
+    { sku: 'RE-R250-Q80141', name: 'Soporte de Manubrio', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 14 },
+  ],
+  '26-F-02': [
+    { sku: 'RE-R250-Q80142', name: 'Amortiguador Trasero', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 9 },
+  ],
+  '26-G-02': [
+    { sku: 'RE-R250-Q80140', name: 'Base de Batería', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 16 },
+  ],
   // Fila 27
   '27-G-03': [
     { sku: 'RE-R250-N60101', name: 'Kit de Cadena y Piñones', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 15 },
   ],
   '27-G-04': [
     { sku: 'RE-R250-N60102', name: 'Cadena de Transmisión 428H', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 25 },
+  ],
+  '27-G-05': [
+    { sku: 'RE-R250-Q80143', name: 'Resorte de Amortiguador', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 18 },
+  ],
+  //Fila 28
+  '28-A-05': [
+    { sku: 'RE-R250-Q80144', name: 'Horquilla Delantera', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 6 },
+  ],
+  '28-C-05': [
+    { sku: 'RE-R250-Q80145', name: 'Retén de Horquilla', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 35 },
+  ],
+  '28-F-05': [
+    { sku: 'RE-R250-Q80146', name: 'Protector de Motor', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 7 },
+  ],
+  //Fila 29
+  '29-A-02': [
+    { sku: 'RE-R250-Q80147', name: 'Cubrecadena Superior', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 13 },
+  ],
+  '29-B-02': [
+    { sku: 'RE-R250-Q80148', name: 'Sensor de Velocidad', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 11 },
+  ],
+  '29-C-02': [
+    { sku: 'RE-R250-Q80149', name: 'Interruptor de Encendido', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 16 },
+  ],
+  '29-G-02': [
+    { sku: 'RE-R250-Q80150', name: 'Soporte de Instrumentos', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 8 },
   ],
   // Fila 30
   '30-A-01': [
