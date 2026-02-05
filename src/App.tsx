@@ -22,6 +22,7 @@ import DispatchConfirmation from './pages/DispatchConfirmation';
 
 // Query & Profile (M11-M12)
 import QueryModule from './pages/QueryModule';
+import ReportModule from './pages/ReportModule';
 import Profile from './pages/Profile';
 
 import ComingSoon from './pages/ComingSoon';
@@ -160,10 +161,7 @@ function App() {
           path="/report"
           element={
             <ProtectedRoute>
-              <ComingSoon
-                title="Reportar Incidencias"
-                description="El módulo de reportes está en desarrollo. Aquí podrás reportar problemas y discrepancias en el inventario."
-              />
+              <ReportModule />
             </ProtectedRoute>
           }
         />
