@@ -103,6 +103,15 @@ const Packing: React.FC = () => {
   const totalItems = order.items.length;
   const totalUnits = order.items.reduce((sum, item) => sum + item.requestedQuantity, 0);
 
+  // Detectar despacho parcial
+  const hasPartialDispatch = pickedItems?.some(
+    item => item.pickedQuantity < item.requestedQuantity
+  ) || false;
+  const partialItems = pickedItems?.filter(
+    item => item.pickedQuantity < item.requestedQuantity
+  ) || [];
+  const totalPickedUnits = pickedItems?.reduce((sum, item) => sum + item.pickedQuantity, 0) || totalUnits;
+
   const allChecked = Object.values(checklist).every(v => v);
   // Permitir continuar si todo está verificado O si se reportó un problema
   const canProceed = allChecked || issueReported;
@@ -289,6 +298,15 @@ const Packing: React.FC = () => {
       cartons: cartonsData,
       totalCartons: cartonCount,
       replacementsUsed,
+      hasPartialDispatch,
+      partialItems: partialItems.map(item => ({
+        productSku: item.productSku,
+        productName: item.productName,
+        pickedQuantity: item.pickedQuantity,
+        requestedQuantity: item.requestedQuantity,
+      })),
+      totalPickedUnits,
+      totalRequestedUnits: totalUnits,
     }));
 
     navigate(`/dispatch/confirmation/${orderId}`);
@@ -301,13 +319,19 @@ const Packing: React.FC = () => {
       </h1>
 
       {/* Summary Card */}
-      <div className="bg-white rounded-xl shadow-sm p-4 mb-4">
+      <div className={`rounded-xl shadow-sm p-4 mb-4 ${hasPartialDispatch ? 'bg-orange-50 border-2 border-orange-300' : 'bg-white'}`}>
         <div className="flex items-center gap-3 mb-3">
-          <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-            <CheckCircle2 className="w-6 h-6 text-green-500" />
+          <div className={`w-10 h-10 rounded-full flex items-center justify-center ${hasPartialDispatch ? 'bg-orange-100' : 'bg-green-100'}`}>
+            {hasPartialDispatch ? (
+              <AlertTriangle className="w-6 h-6 text-orange-500" />
+            ) : (
+              <CheckCircle2 className="w-6 h-6 text-green-500" />
+            )}
           </div>
           <div className="flex-1">
-            <p className="text-sm font-semibold text-green-600">✓ RECOLECCIÓN COMPLETA</p>
+            <p className={`text-sm font-semibold ${hasPartialDispatch ? 'text-orange-600' : 'text-green-600'}`}>
+              {hasPartialDispatch ? '⚠️ DESPACHO PARCIAL' : '✓ RECOLECCIÓN COMPLETA'}
+            </p>
             <p className="text-xs text-gray-600">Orden {order.orderNumber}</p>
           </div>
         </div>
@@ -316,10 +340,48 @@ const Packing: React.FC = () => {
           <p className="mt-1">
             📦 {totalItems}/{totalItems} productos recolectados
           </p>
-          <p>✓ {totalUnits}/{totalUnits} unidades</p>
+          <p className={hasPartialDispatch ? 'text-orange-600 font-semibold' : ''}>
+            {hasPartialDispatch ? '⚠️' : '✓'} {totalPickedUnits}/{totalUnits} unidades
+            {hasPartialDispatch && ` (faltan ${totalUnits - totalPickedUnits})`}
+          </p>
           <p className="text-blue-600 mt-1">⏱️ Tiempo de picking: 12 min</p>
         </div>
       </div>
+
+      {/* Alerta detallada de despacho parcial */}
+      {hasPartialDispatch && (
+        <div className="bg-orange-50 border border-orange-300 rounded-xl p-4 mb-4">
+          <div className="flex items-start gap-2 mb-3">
+            <AlertTriangle className="w-5 h-5 text-orange-500 mt-0.5 flex-shrink-0" />
+            <div className="flex-1">
+              <p className="text-sm font-semibold text-orange-800">
+                Productos con cantidad incompleta ({partialItems.length})
+              </p>
+              <p className="text-xs text-orange-700 mt-1">
+                Las etiquetas incluirán una advertencia de despacho parcial.
+              </p>
+            </div>
+          </div>
+          <div className="space-y-2">
+            {partialItems.map((item) => (
+              <div key={item.productSku} className="bg-white rounded-lg p-2 text-sm flex items-center justify-between">
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-gray-900 truncate">{item.productName}</p>
+                  <p className="text-xs text-gray-500 font-mono">{item.productSku}</p>
+                </div>
+                <div className="text-right ml-2">
+                  <p className="text-orange-600 font-bold">
+                    {item.pickedQuantity}/{item.requestedQuantity}
+                  </p>
+                  <p className="text-xs text-orange-500">
+                    -{item.requestedQuantity - item.pickedQuantity} und
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Productos con reemplazos */}
       {Object.keys(replacementsUsed).length > 0 && (

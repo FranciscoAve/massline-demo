@@ -14,12 +14,14 @@ export interface DispatchLabelData {
     code: string;
     description: string;
     quantity: number;
+    requestedQuantity?: number; // Para detectar despacho parcial
     replacement?: {
       code: string;
       description: string;
       quantity: number;
     };
   }[];
+  hasPartialDispatch?: boolean;
 }
 
 /**
@@ -193,6 +195,29 @@ function addLabelPageToDoc(doc: jsPDF, data: DispatchLabelData, isFirstPage: boo
   doc.setFontSize(9);
   doc.text('Total:', PAGE_WIDTH - MARGIN - 25, y);
   doc.text(totalQuantity.toString(), PAGE_WIDTH - MARGIN - 5, y, { align: 'right' });
+  y += 6;
+
+  // ==================== PARTIAL DISPATCH WARNING ====================
+  if (data.hasPartialDispatch) {
+    // Draw warning box
+    doc.setFillColor(255, 237, 213); // Orange-50 background
+    doc.setDrawColor(251, 146, 60); // Orange-400 border
+    doc.setLineWidth(0.5);
+    doc.roundedRect(MARGIN, y, PAGE_WIDTH - MARGIN * 2, 12, 2, 2, 'FD');
+
+    // Warning text
+    doc.setFontSize(7);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(194, 65, 12); // Orange-700
+    doc.text('⚠️ DESPACHO PARCIAL', PAGE_WIDTH / 2, y + 5, { align: 'center' });
+
+    doc.setFontSize(6);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Cantidades incompletas - Verificar con almacén', PAGE_WIDTH / 2, y + 9, { align: 'center' });
+
+    // Reset color
+    doc.setTextColor(0, 0, 0);
+  }
 
   // ==================== FOOTER ====================
   doc.setFontSize(6);
@@ -230,7 +255,8 @@ export function generateMultiCartonPdf(
     };
   },
   cartons: CartonData[],
-  replacementsUsed?: Record<string, ReplacementInfo>
+  replacementsUsed?: Record<string, ReplacementInfo>,
+  hasPartialDispatch?: boolean
 ): void {
   if (cartons.length === 0) return;
 
@@ -276,6 +302,7 @@ export function generateMultiCartonPdf(
           } : undefined,
         };
       }),
+      hasPartialDispatch,
     };
 
     addLabelPageToDoc(doc, labelData, index === 0);

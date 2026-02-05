@@ -69,6 +69,14 @@ const PickingProcess: React.FC = () => {
   const completedItems = items.filter(item => item.status === 'picked').length;
   const allCompleted = completedItems === items.length;
 
+  // Detectar si hay despachos parciales
+  const hasPartialDispatch = items.some(
+    item => item.status === 'picked' && item.pickedQuantity < item.requestedQuantity
+  );
+  const partialItems = items.filter(
+    item => item.status === 'picked' && item.pickedQuantity < item.requestedQuantity
+  );
+
   if (!order) {
     return <div className="min-h-screen flex items-center justify-center text-gray-500">Orden no encontrada</div>;
   }
@@ -448,7 +456,14 @@ const PickingProcess: React.FC = () => {
                 {/* Estado */}
                 <div className="col-span-2 flex justify-center">
                   {isPicked && (
-                    <CheckCircle2 className="w-5 h-5 text-green-500" />
+                    item.pickedQuantity < item.requestedQuantity ? (
+                      <div className="flex flex-col items-center">
+                        <AlertTriangle className="w-5 h-5 text-orange-500" />
+                        <span className="text-[10px] text-orange-600 font-medium">Parcial</span>
+                      </div>
+                    ) : (
+                      <CheckCircle2 className="w-5 h-5 text-green-500" />
+                    )
                   )}
                 </div>
               </div>
@@ -473,13 +488,37 @@ const PickingProcess: React.FC = () => {
           <span className="text-gray-600">
             {completedItems}/{items.length} recolectados
           </span>
-          {allCompleted && (
+          {allCompleted && !hasPartialDispatch && (
             <span className="text-green-600 font-semibold flex items-center gap-1">
               <CheckCircle2 className="w-4 h-4" />
               Todo listo
             </span>
           )}
+          {allCompleted && hasPartialDispatch && (
+            <span className="text-orange-600 font-semibold flex items-center gap-1">
+              <AlertTriangle className="w-4 h-4" />
+              {partialItems.length} parcial{partialItems.length > 1 ? 'es' : ''}
+            </span>
+          )}
         </div>
+
+        {/* Alerta de despacho parcial */}
+        {allCompleted && hasPartialDispatch && (
+          <div className="bg-orange-50 border border-orange-300 rounded-lg px-3 py-2 mb-3">
+            <div className="flex items-start gap-2">
+              <AlertTriangle className="w-4 h-4 text-orange-500 mt-0.5 flex-shrink-0" />
+              <div className="flex-1">
+                <p className="text-xs text-orange-800 font-semibold">
+                  ⚠️ Despacho parcial - {partialItems.length} producto{partialItems.length > 1 ? 's' : ''} con cantidad incompleta
+                </p>
+                <p className="text-xs text-orange-700 mt-1">
+                  Se despachará menos de lo solicitado. El resumen y etiquetas mostrarán esta advertencia.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         <Button
           onClick={() => {
             // Guardar en sessionStorage para persistencia
@@ -496,8 +535,12 @@ const PickingProcess: React.FC = () => {
           }}
           disabled={!allCompleted}
           fullWidth
+          className={hasPartialDispatch ? '!bg-orange-500 hover:!bg-orange-600' : ''}
         >
-          {allCompleted ? 'CONTINUAR A EMPAQUE' : `COMPLETAR PICKING (${items.length - completedItems} restantes)`}
+          {allCompleted
+            ? (hasPartialDispatch ? 'CONTINUAR CON DESPACHO PARCIAL' : 'CONTINUAR A EMPAQUE')
+            : `COMPLETAR PICKING (${items.length - completedItems} restantes)`
+          }
         </Button>
       </div>
 
@@ -773,13 +816,28 @@ const PickingProcess: React.FC = () => {
               >
                 Cancelar
               </Button>
-              <Button
-                onClick={handleConfirmQuantity}
-                disabled={quantity < selectedItem.requestedQuantity}
-                className="flex-1"
-              >
-                {quantity >= selectedItem.requestedQuantity ? 'CONFIRMAR' : `FALTAN ${selectedItem.requestedQuantity - quantity}`}
-              </Button>
+              {quantity >= selectedItem.requestedQuantity ? (
+                <Button
+                  onClick={handleConfirmQuantity}
+                  className="flex-1"
+                >
+                  CONFIRMAR
+                </Button>
+              ) : quantity > 0 ? (
+                <Button
+                  onClick={handleConfirmQuantity}
+                  className="flex-1 !bg-orange-500 hover:!bg-orange-600"
+                >
+                  CONFIRMAR PARCIAL ({quantity}/{selectedItem.requestedQuantity})
+                </Button>
+              ) : (
+                <Button
+                  disabled
+                  className="flex-1"
+                >
+                  SELECCIONA CANTIDAD
+                </Button>
+              )}
             </div>
           </div>
         </div>

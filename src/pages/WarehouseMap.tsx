@@ -228,7 +228,7 @@ const WarehouseMap: React.FC = () => {
 
   // Vista general de la bodega (estilo mapa interactivo)
   const renderOverview = () => (
-    <div className="flex flex-col h-[calc(100vh-140px)]">
+    <div className="flex flex-col h-[calc(100vh-56px)]">
       {/* Controles de zoom */}
       <div className="absolute top-20 right-4 z-20 flex flex-col gap-2">
         <button

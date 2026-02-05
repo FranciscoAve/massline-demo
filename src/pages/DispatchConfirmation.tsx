@@ -1,15 +1,26 @@
 import React, { useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { CheckCircle2, Package, Clock, MapPin, Truck, User, Copy, Share2, Trophy, Printer, Check } from 'lucide-react';
+import { CheckCircle2, Package, Clock, MapPin, Truck, User, Copy, Share2, Trophy, Printer, Check, AlertTriangle } from 'lucide-react';
 import Button from '../components/ui/Button';
 import { mockOrders } from '../data/mockData';
 import { useWorkshopOrdersStore } from '../stores/workshopOrdersStore';
 import { generateMultiCartonPdf, generateLabelFromOrder, type CartonData, type ReplacementInfo } from '../utils/dispatchLabelPdf';
 
+interface PartialItem {
+  productSku: string;
+  productName: string;
+  pickedQuantity: number;
+  requestedQuantity: number;
+}
+
 interface StoredCartonData {
   cartons: CartonData[];
   totalCartons: number;
   replacementsUsed?: Record<string, ReplacementInfo>;
+  hasPartialDispatch?: boolean;
+  partialItems?: PartialItem[];
+  totalPickedUnits?: number;
+  totalRequestedUnits?: number;
 }
 
 // Helper para recuperar datos de cartones de sessionStorage
@@ -49,7 +60,7 @@ const DispatchConfirmation: React.FC = () => {
   const handleGenerateLabel = () => {
     if (storedData && storedData.cartons.length > 0) {
       // Generar PDF multi-página con los cartones configurados
-      generateMultiCartonPdf(order, storedData.cartons, storedData.replacementsUsed);
+      generateMultiCartonPdf(order, storedData.cartons, storedData.replacementsUsed, storedData.hasPartialDispatch);
     } else {
       // Fallback: generar etiqueta con todos los productos en un cartón
       generateLabelFromOrder(order, 1, 1);
@@ -70,13 +81,58 @@ const DispatchConfirmation: React.FC = () => {
     <div className="min-h-screen bg-gray-50 flex flex-col p-4">
       {/* Success Animation */}
       <div className="flex flex-col items-center py-8 mb-6">
-        <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mb-4 animate-bounce">
-          <CheckCircle2 className="w-14 h-14 text-green-500" strokeWidth={3} />
+        <div className={`w-24 h-24 rounded-full flex items-center justify-center mb-4 animate-bounce ${
+          storedData?.hasPartialDispatch ? 'bg-orange-100' : 'bg-green-100'
+        }`}>
+          {storedData?.hasPartialDispatch ? (
+            <AlertTriangle className="w-14 h-14 text-orange-500" strokeWidth={2} />
+          ) : (
+            <CheckCircle2 className="w-14 h-14 text-green-500" strokeWidth={3} />
+          )}
         </div>
-        <h1 className="text-2xl font-bold text-gray-900 mb-1">✓ DESPACHO COMPLETO</h1>
+        <h1 className={`text-2xl font-bold mb-1 ${storedData?.hasPartialDispatch ? 'text-orange-600' : 'text-gray-900'}`}>
+          {storedData?.hasPartialDispatch ? '⚠️ DESPACHO PARCIAL' : '✓ DESPACHO COMPLETO'}
+        </h1>
         <p className="text-gray-600">Orden {order.orderNumber}</p>
-        <p className="text-sm text-gray-500">procesada exitosamente</p>
+        <p className="text-sm text-gray-500">
+          {storedData?.hasPartialDispatch ? 'procesada con cantidades incompletas' : 'procesada exitosamente'}
+        </p>
       </div>
+
+      {/* Alerta de despacho parcial */}
+      {storedData?.hasPartialDispatch && storedData.partialItems && (
+        <div className="bg-orange-50 border-2 border-orange-300 rounded-xl p-4 mb-4">
+          <div className="flex items-start gap-3 mb-3">
+            <AlertTriangle className="w-6 h-6 text-orange-500 flex-shrink-0" />
+            <div className="flex-1">
+              <p className="text-sm font-bold text-orange-800 mb-1">
+                ⚠️ ADVERTENCIA: Despacho incompleto
+              </p>
+              <p className="text-xs text-orange-700">
+                Se despacharon {storedData.totalPickedUnits} de {storedData.totalRequestedUnits} unidades solicitadas.
+              </p>
+            </div>
+          </div>
+          <div className="space-y-2">
+            {storedData.partialItems.map((item) => (
+              <div key={item.productSku} className="bg-white rounded-lg p-3 flex items-center justify-between">
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-gray-900 truncate">{item.productName}</p>
+                  <p className="text-xs text-gray-500 font-mono">{item.productSku}</p>
+                </div>
+                <div className="text-right ml-2">
+                  <p className="text-orange-600 font-bold text-lg">
+                    {item.pickedQuantity}/{item.requestedQuantity}
+                  </p>
+                  <p className="text-xs text-orange-500">
+                    Faltan {item.requestedQuantity - item.pickedQuantity}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Stats */}
       <div className="bg-white rounded-xl shadow-sm p-4 mb-4 text-center">
