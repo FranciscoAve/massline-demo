@@ -24,6 +24,7 @@ import DispatchConfirmation from './pages/DispatchConfirmation';
 import QueryModule from './pages/QueryModule';
 import ReportModule from './pages/ReportModule';
 import Profile from './pages/Profile';
+import WarehouseMap from './pages/WarehouseMap';
 
 import ComingSoon from './pages/ComingSoon';
 
@@ -143,6 +144,16 @@ function App() {
           element={
             <ProtectedRoute>
               <QueryModule />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Warehouse Map */}
+        <Route
+          path="/warehouse-map"
+          element={
+            <ProtectedRoute>
+              <WarehouseMap />
             </ProtectedRoute>
           }
         />

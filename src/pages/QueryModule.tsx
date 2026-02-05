@@ -151,12 +151,61 @@ const QueryModule: React.FC = () => {
       <div className="flex-1 p-4 overflow-y-auto">
         {activeTab === 'map' ? (
           /* Vista de Mapa */
-          <div className="bg-white rounded-xl shadow-sm p-6 text-center">
-            <MapPin className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-gray-700 mb-2">Mapa del Almacén</h3>
-            <p className="text-sm text-gray-500">
-              Visualización del layout del almacén próximamente disponible.
-            </p>
+          <div className="space-y-4">
+            {/* Card principal del mapa */}
+            <div
+              onClick={() => navigate('/warehouse-map')}
+              className="bg-gradient-to-br from-blue-500 to-blue-700 rounded-2xl p-6 text-white shadow-lg cursor-pointer active:scale-[0.98] transition-transform"
+            >
+              <div className="flex items-center gap-4">
+                <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center">
+                  <MapPin className="w-8 h-8" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-xl font-bold mb-1">Mapa de Bodega</h3>
+                  <p className="text-blue-100 text-sm">
+                    Vista interactiva de todas las ubicaciones
+                  </p>
+                </div>
+                <ChevronRight className="w-6 h-6 text-white/70" />
+              </div>
+            </div>
+
+            {/* Información de la bodega */}
+            <div className="bg-white rounded-xl shadow-sm p-4">
+              <h4 className="font-semibold text-gray-900 mb-3">Estructura de la Bodega</h4>
+              <div className="grid grid-cols-3 gap-3 text-center">
+                <div className="bg-gray-50 rounded-lg p-3">
+                  <p className="text-2xl font-bold text-blue-600">32</p>
+                  <p className="text-xs text-gray-500">Filas</p>
+                </div>
+                <div className="bg-gray-50 rounded-lg p-3">
+                  <p className="text-2xl font-bold text-blue-600">7</p>
+                  <p className="text-xs text-gray-500">Estantes/fila</p>
+                </div>
+                <div className="bg-gray-50 rounded-lg p-3">
+                  <p className="text-2xl font-bold text-blue-600">5</p>
+                  <p className="text-xs text-gray-500">Niveles</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Formato de ubicación */}
+            <div className="bg-white rounded-xl shadow-sm p-4">
+              <h4 className="font-semibold text-gray-900 mb-2">Formato de Ubicación</h4>
+              <div className="bg-gray-100 rounded-lg p-3 font-mono text-center">
+                <span className="text-blue-600 font-bold">05</span>
+                <span className="text-gray-400">-</span>
+                <span className="text-green-600 font-bold">B</span>
+                <span className="text-gray-400">-</span>
+                <span className="text-orange-600 font-bold">03</span>
+              </div>
+              <div className="flex justify-between text-xs text-gray-500 mt-2 px-2">
+                <span>Fila</span>
+                <span>Columna</span>
+                <span>Nivel</span>
+              </div>
+            </div>
           </div>
         ) : selectedProduct && product ? (
           /* Product Detail View - Sin tabs, una sola sección */

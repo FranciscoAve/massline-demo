@@ -270,16 +270,16 @@ export const mockProducts: Product[] = [
 ];
 
 // Mock Locations
-// Formato: Fila-Columna-Nivel (ej: 05-B-00)
-// Fila = número (01-99), Columna = letra (A-Z), Nivel = número (00-99)
+// Formato: Fila-Columna-Nivel (ej: 05-B-03)
+// Fila = número (01-32), Columna = letra (A-G), Nivel = número (01-05)
 export const mockLocations: WarehouseLocation[] = [
   // Fila 05 - Alta rotación
-  { id: '1', code: '05-B-00', zone: '05', aisle: 'B', rack: '00', level: '00', type: 'storage', maxUnits: 100, currentUtilization: 0.65, status: 'active' },
-  { id: '2', code: '05-B-08', zone: '05', aisle: 'B', rack: '08', level: '08', type: 'storage', maxUnits: 100, currentUtilization: 0.72, status: 'active' },
+  { id: '1', code: '05-B-03', zone: '05', aisle: 'B', rack: '03', level: '03', type: 'storage', maxUnits: 100, currentUtilization: 0.65, status: 'active' },
+  { id: '2', code: '05-B-04', zone: '05', aisle: 'B', rack: '04', level: '04', type: 'storage', maxUnits: 100, currentUtilization: 0.72, status: 'active' },
   { id: '3', code: '08-D-01', zone: '08', aisle: 'D', rack: '01', level: '01', type: 'storage', maxUnits: 120, currentUtilization: 0.45, status: 'active' },
   { id: '4', code: '11-F-04', zone: '11', aisle: 'F', rack: '04', level: '04', type: 'storage', maxUnits: 120, currentUtilization: 0.15, status: 'active' },
   { id: '5', code: '17-E-01', zone: '17', aisle: 'E', rack: '01', level: '01', type: 'storage', maxUnits: 100, currentUtilization: 0.80, status: 'active' },
-  { id: '6', code: '18-C-06', zone: '18', aisle: 'C', rack: '06', level: '06', type: 'storage', maxUnits: 100, currentUtilization: 0.10, status: 'active' },
+  { id: '6', code: '18-C-05', zone: '18', aisle: 'C', rack: '05', level: '05', type: 'storage', maxUnits: 100, currentUtilization: 0.10, status: 'active' },
 
   // Fila 23 - Alta rotación
   { id: '7', code: '23-A-01', zone: '23', aisle: 'A', rack: '01', level: '01', type: 'storage', maxUnits: 150, currentUtilization: 0.55, status: 'active' },
@@ -310,7 +310,7 @@ export const mockLocations: WarehouseLocation[] = [
 ];
 
 // Mock Picking Orders
-// Ubicaciones en formato: Fila-Columna-Nivel (ej: 05-B-00)
+// Ubicaciones en formato: Fila-Columna-Nivel (ej: 05-B-03)
 export const mockOrders: PickingOrder[] = [
   {
     id: '1',
@@ -331,7 +331,7 @@ export const mockOrders: PickingOrder[] = [
         productImage: 'https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?w=100',
         requestedQuantity: 10,
         pickedQuantity: 0,
-        locationCode: '05-B-00',
+        locationCode: '05-B-03',
         distance: 15,
         status: 'pending',
       },
@@ -342,7 +342,7 @@ export const mockOrders: PickingOrder[] = [
         productImage: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100',
         requestedQuantity: 4,
         pickedQuantity: 0,
-        locationCode: '05-B-08',
+        locationCode: '05-B-04',
         distance: 22,
         status: 'pending',
       },
@@ -488,7 +488,7 @@ export const mockOrders: PickingOrder[] = [
         productImage: 'https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?w=100',
         requestedQuantity: 15,
         pickedQuantity: 15,
-        locationCode: '05-B-00',
+        locationCode: '05-B-03',
         distance: 15,
         status: 'picked',
       },
@@ -526,7 +526,7 @@ export const mockOrders: PickingOrder[] = [
         productImage: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100',
         requestedQuantity: 8,
         pickedQuantity: 0,
-        locationCode: '05-B-08',
+        locationCode: '05-B-04',
         distance: 22,
         status: 'pending',
       },
@@ -553,7 +553,7 @@ export const mockOrders: PickingOrder[] = [
         productImage: 'https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?w=100',
         requestedQuantity: 20,
         pickedQuantity: 0,
-        locationCode: '05-B-00',
+        locationCode: '05-B-03',
         distance: 15,
         status: 'pending',
       },
@@ -564,7 +564,7 @@ export const mockOrders: PickingOrder[] = [
         productImage: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100',
         requestedQuantity: 20,
         pickedQuantity: 0,
-        locationCode: '05-B-08',
+        locationCode: '05-B-04',
         distance: 22,
         status: 'pending',
       },
@@ -647,43 +647,115 @@ export interface ShelfProduct {
   availableQuantity: number;
 }
 
-// Inventario por ubicación con formato: Fila-Columna-Nivel (ej: 05-B-00)
+// Inventario por ubicación con formato: Fila-Columna-Nivel (ej: 05-B-03)
+// Niveles van de 1 (abajo) a 5 (arriba)
 export const mockShelfInventory: Record<string, ShelfProduct[]> = {
+  // Fila 03
+  '03-A-02': [
+    { sku: 'RE-R250-M50101', name: 'Filtro de Aceite Premium', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 85 },
+  ],
+  '03-C-04': [
+    { sku: 'RE-R250-M50102', name: 'Filtro de Aire Deportivo', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 42 },
+  ],
   // Fila 05
-  '05-B-00': [
+  '05-B-03': [
     { sku: 'RE-R250-H10313', name: 'Direccional Delantera LH', image: 'https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?w=100', availableQuantity: 50 },
   ],
-  '05-B-08': [
+  '05-B-04': [
     { sku: 'RE-R250-I10312', name: 'Direccional Delantera RH', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 30 },
+  ],
+  '05-D-02': [
+    { sku: 'RE-R250-H10314', name: 'Direccional Trasera LH', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 25 },
+  ],
+  '05-D-03': [
+    { sku: 'RE-R250-H10315', name: 'Direccional Trasera RH', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 25 },
+  ],
+  '05-F-01': [
+    { sku: 'RE-R250-H10320', name: 'Faro Delantero LED', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 18 },
   ],
   // Fila 08
   '08-D-01': [
     { sku: 'RE-R250-I10504', name: 'Comando Derecho Chief 4V Ninja 2.5/3.0', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 3 },
   ],
+  '08-D-02': [
+    { sku: 'RE-R250-I10505', name: 'Comando Izquierdo Chief 4V', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 5 },
+  ],
+  '08-E-03': [
+    { sku: 'RE-R250-I10510', name: 'Manubrio Cromado', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 12 },
+  ],
   // Fila 11
   '11-F-04': [
     { sku: 'RE-R250-I0709', name: 'Estribo de Conductor C/Pedales Izq./Der.', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 28 },
+  ],
+  '11-F-05': [
+    { sku: 'RE-R250-I0710', name: 'Estribo Pasajero Set', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 20 },
+  ],
+  '11-G-02': [
+    { sku: 'RE-R250-I0715', name: 'Pedal de Freno Trasero', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 35 },
   ],
   // Fila 12
   '12-B-03': [
     { sku: 'RE-R250-K20415', name: 'Disco de Freno Ventilado', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 22 },
   ],
+  '12-B-04': [
+    { sku: 'RE-R250-K20416', name: 'Pastillas de Freno Delanteras', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 60 },
+  ],
+  '12-C-01': [
+    { sku: 'RE-R250-K20420', name: 'Pastillas de Freno Traseras', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 55 },
+  ],
   // Fila 14
   '14-C-02': [
     { sku: 'RE-R250-L40820', name: 'Aceite Motor 10W-40 Sintético', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 120 },
+  ],
+  '14-C-03': [
+    { sku: 'RE-R250-L40821', name: 'Aceite Motor 20W-50 Mineral', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 95 },
+  ],
+  '14-D-01': [
+    { sku: 'RE-R250-L40830', name: 'Líquido de Frenos DOT4', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 80 },
   ],
   // Fila 17
   '17-E-01': [
     { sku: 'RE-RNJ-250302', name: 'Cañería del Enfriador de Aceite Set 2pcs', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 67 },
   ],
+  '17-E-02': [
+    { sku: 'RE-RNJ-250303', name: 'Manguera Radiador Superior', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 40 },
+  ],
   // Fila 18
-  '18-C-06': [
+  '18-C-05': [
     { sku: 'RE-RNJ-110237', name: 'Piñón de Velocímetro Chief II', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 15 },
+  ],
+  '18-A-03': [
+    { sku: 'RE-RNJ-110240', name: 'Cable de Velocímetro', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 30 },
   ],
   // Fila 23
   '23-A-01': [
     { sku: 'RE-RNJ-330501', name: 'Batería 12V 7Ah', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 35 },
+  ],
+  '23-A-02': [
     { sku: 'RE-R200-142125', name: 'Asiento Delantero & Posterior Set Chief II', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 8 },
+  ],
+  '23-B-04': [
+    { sku: 'RE-RNJ-330510', name: 'Batería 12V 12Ah Reforzada', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 20 },
+  ],
+  // Fila 27
+  '27-G-03': [
+    { sku: 'RE-R250-N60101', name: 'Kit de Cadena y Piñones', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 15 },
+  ],
+  '27-G-04': [
+    { sku: 'RE-R250-N60102', name: 'Cadena de Transmisión 428H', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 25 },
+  ],
+  // Fila 30
+  '30-A-01': [
+    { sku: 'RE-R250-P70201', name: 'Llanta Delantera 275-18', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 8 },
+  ],
+  '30-A-02': [
+    { sku: 'RE-R250-P70202', name: 'Llanta Trasera 300-18', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 10 },
+  ],
+  '30-B-03': [
+    { sku: 'RE-R250-P70210', name: 'Cámara de Aire 275-18', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 45 },
+  ],
+  '30-B-04': [
+    { sku: 'RE-R250-P70211', name: 'Cámara de Aire 300-18', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100', availableQuantity: 40 },
   ],
 };
 
@@ -721,8 +793,8 @@ export interface ProductReplacement {
 }
 
 export const productReplacements: Record<string, ProductReplacement> = {
-  'RE-R250-H10313': { sku: 'RE-R250-I10312', name: 'Direccional Delantera RH', location: '05-B-08' },
-  'RE-R250-I10312': { sku: 'RE-R250-H10313', name: 'Direccional Delantera LH', location: '05-B-00' },
+  'RE-R250-H10313': { sku: 'RE-R250-I10312', name: 'Direccional Delantera RH', location: '05-B-04' },
+  'RE-R250-I10312': { sku: 'RE-R250-H10313', name: 'Direccional Delantera LH', location: '05-B-03' },
   'RE-R250-I10504': { sku: 'RE-R250-I0709', name: 'Estribo de Conductor C/Pedales', location: '11-F-04' },
   'RE-R250-I0709': { sku: 'RE-R250-I10504', name: 'Comando Derecho Chief 4V', location: '08-D-01' },
   'RE-RNJ-250302': { sku: 'RE-R250-L40820', name: 'Aceite Motor 10W-40 Sintético', location: '14-C-02' },
@@ -777,7 +849,7 @@ export const mockReceptionOrders: ReceptionOrder[] = [
         productImage: 'https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?w=100',
         expectedQuantity: 25,
         receivedQuantity: 25,
-        locationCode: '05-B-00',
+        locationCode: '05-B-03',
         status: 'received',
       },
       {
@@ -787,7 +859,7 @@ export const mockReceptionOrders: ReceptionOrder[] = [
         productImage: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100',
         expectedQuantity: 25,
         receivedQuantity: 25,
-        locationCode: '05-B-08',
+        locationCode: '05-B-04',
         status: 'received',
       },
     ],
@@ -960,7 +1032,7 @@ export const mockReceptionOrders: ReceptionOrder[] = [
         productImage: 'https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?w=100',
         expectedQuantity: 30,
         receivedQuantity: 0,
-        locationCode: '05-B-00',
+        locationCode: '05-B-03',
         status: 'pending',
       },
     ],
