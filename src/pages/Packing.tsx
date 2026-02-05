@@ -68,19 +68,17 @@ const Packing: React.FC = () => {
 
   // Calcular productos disponibles (no asignados a ningún cartón o con cantidad restante)
   // IMPORTANTE: Este hook debe estar antes de cualquier return condicional
-  const availableProducts = useMemo(() => {
+  const availableProducts = (() => {
     if (!order) return [];
 
     const assigned: Record<string, number> = {};
 
-    // Sumar cantidades asignadas por producto
     Object.values(cartonProducts).forEach(products => {
       products.forEach(p => {
         assigned[p.productSku] = (assigned[p.productSku] || 0) + p.quantity;
       });
     });
 
-    // Retornar productos con cantidad disponible
     return order.items
       .map(item => {
         const pickedItem = pickedItems?.find(p => p.productSku === item.productSku);
@@ -96,7 +94,8 @@ const Packing: React.FC = () => {
         };
       })
       .filter(p => p.availableQuantity > 0);
-  }, [order, cartonProducts, pickedItems]);
+  })();
+
 
   if (!order) return <div>Order not found</div>;
 
@@ -586,13 +585,12 @@ const Packing: React.FC = () => {
             return (
               <div
                 key={cartonNum}
-                className={`border-2 rounded-xl overflow-hidden transition-all ${
-                  isGenerated
+                className={`border-2 rounded-xl overflow-hidden transition-all ${isGenerated
                     ? 'border-green-400 bg-green-50'
                     : productCount > 0
-                    ? 'border-blue-300 bg-blue-50'
-                    : 'border-gray-200 bg-white'
-                }`}
+                      ? 'border-blue-300 bg-blue-50'
+                      : 'border-gray-200 bg-white'
+                  }`}
               >
                 {/* Carton header */}
                 <button
@@ -600,9 +598,8 @@ const Packing: React.FC = () => {
                   className="w-full px-4 py-3 flex items-center justify-between"
                 >
                   <div className="flex items-center gap-3">
-                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center font-bold text-lg ${
-                      isGenerated ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-700'
-                    }`}>
+                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center font-bold text-lg ${isGenerated ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-700'
+                      }`}>
                       {isGenerated ? '✓' : cartonNum}
                     </div>
                     <div className="text-left">
@@ -691,13 +688,12 @@ const Packing: React.FC = () => {
                     <button
                       onClick={() => handleGenerateLabel(cartonNum)}
                       disabled={!canGenerate}
-                      className={`mt-3 w-full py-2 rounded-lg flex items-center justify-center gap-2 text-sm font-medium transition-all ${
-                        isGenerated
+                      className={`mt-3 w-full py-2 rounded-lg flex items-center justify-center gap-2 text-sm font-medium transition-all ${isGenerated
                           ? 'bg-green-500 text-white'
                           : canGenerate
-                          ? 'bg-blue-500 text-white active:scale-[0.98]'
-                          : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                      }`}
+                            ? 'bg-blue-500 text-white active:scale-[0.98]'
+                            : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                        }`}
                     >
                       <Printer className="w-4 h-4" />
                       {isGenerated ? 'Etiqueta generada' : 'Generar etiqueta'}
